@@ -1,4 +1,7 @@
 // Default Config Values
+const storage_key_board = 'YESGRAM_DATA_BOARD';
+const storage_key_solve_data = 'YESGRAM_DATA_SOLVE';
+
 var config = {
     'board_max_height_ratio': 1.5,
     'board_context_padding_ratio': 0.1,
@@ -36,13 +39,22 @@ class Board {
     }
 
     export() {
-        // TODO!!!!!!!!!!!!!!!!!!!!!!!!!
-        return "asdfasdf";
+        const { large_width, large_height, small_width, small_height, data } = this;
+        const result = {
+            size: [large_width, large_height, small_width, small_height],
+            data: data
+        };
+
+        return btoa(JSON.stringify(result));
     }
 
     static import(string) {
-        // TODO!!!!!!!!!!!!!!!!!!!!!!!!!
-        return new Board(1, 1, 1, 1);
+        const obj = JSON.parse(atob(string));
+        const [large_width, large_height, small_width, small_height] = obj.size;
+        const board = new Board(large_width, large_height, small_width, small_height);
+        board.data = obj.data;
+
+        return board
     }
 
     static testtest() {
@@ -150,7 +162,7 @@ class BoardContext {
             //     break;
         }
     }
-    
+
     display_big_show() {
         const { element, context: ctx, board } = this;
         let { width: c_width, height: c_height } = element;
@@ -273,11 +285,11 @@ class BoardContext {
         ctx.lineWidth = 1;
 
         [c_width, c_height] = this.fit_ratio();
-        
+
         const gap = Math.min(0 | c_width / width, 0 | c_height / height);
         const offset_x = 0 | (c_width - gap * width) / 2;
         const offset_y = 0 | (c_height - gap * height) / 2;
-        
+
         ctx.font = `${0 | small_height * gap / 3}px consolas`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -348,13 +360,36 @@ class BoardContext {
 }
 
 class LocalStorageManager {
+    static make_board_key(puzzle_id) {
+        return `${storage_key_board}-${puzzle_id}`;
+    }
+
+    static get_board(puzzle_id) {
+        const key = LocalStorageManager.make_board_key(puzzle_id);
+        const puzzle = localStorage.getItem(key);
+        if (!puzzle)
+            return null;
+
+        return Board.import(puzzle);
+    }
+
+    static set_board(puzzle_id, board) {
+        const key = LocalStorageManager.make_board_key(puzzle_id);
+        localStorage.setItem(key, board.export());
+    }
+
     static get_solve_data(puzzle_id) {
+        // todo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         return LocalStorageManager.testtest()
     }
 
+    static set_solve_data(puzzle_id, data) {
+        // todo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
+
     static testtest() {
-        const retval = Array.from({length:10}, (_, i)=> 
-            Array.from({length:5}, (_, j)=> 
+        const retval = Array.from({ length: 10 }, (_, i) =>
+            Array.from({ length: 5 }, (_, j) =>
                 ((i + j) % 2 == 1)
             )
         );
