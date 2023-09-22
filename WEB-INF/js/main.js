@@ -362,3 +362,10 @@ class LocalStorageManager {
         return retval;
     }
 }
+
+class Utility {
+    static copy_to_clipboard(element) {
+        const textarea = element;
+        navigator.clipboard.writeText(textarea.value);
+    }
+}
