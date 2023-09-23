@@ -1,5 +1,5 @@
 function init() {
-    const pid = Utility.get_parameter('pid');
+    const pid = 0 | Utility.get_parameter('pid');
     let board = LocalStorageManager.get_board(pid);
 
     if (board == null) {
@@ -14,7 +14,7 @@ function init() {
 }
 
 function save_puzzle() {
-    const pid = 0 | (Utility.get_parameter('pid') ?? -1);
+    const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
 
     board.title = document.getElementById('puzzle-name').value;

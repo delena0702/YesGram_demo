@@ -1,8 +1,7 @@
 function init() {
-    img_board = new BoardContext('img-board', Board.testtest(), ConfigValue.MODE_SMALL_EDIT, {
-        small_x: 1,
-        small_y: 2
-    });
+    const pid = 0 | Utility.get_parameter('pid');
+    const board = LocalStorageManager.get_board(pid);
+    img_board = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT);
 }
 
 init();

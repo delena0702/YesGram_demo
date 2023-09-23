@@ -100,7 +100,6 @@ class Board {
 
             return board;
         } catch (e) {
-            console.error(e);
             return null;
         }
     }
@@ -155,17 +154,7 @@ class BoardContext {
         const object = this;
 
         function resize_element() {
-            const element = object.get_element();
-            const max_size = 0 | document.documentElement.clientHeight * config['board_max_height_ratio'];
-            const size = Math.min(element.parentElement.clientWidth, max_size);
-
-            element.width = BoardContext.CANVAS_SIZE;
-            element.height = BoardContext.CANVAS_SIZE;
-
-            element.style.width = `${size}px`;
-            element.style.height = `${size}px`;
-
-            object.display();
+            object.resize_element();
         }
 
         window.addEventListener(
@@ -174,7 +163,21 @@ class BoardContext {
             }
         );
 
-        resize_element();
+        this.resize_element();
+    }
+
+    resize_element() {
+        const element = this.get_element();
+        const max_size = 0 | document.documentElement.clientHeight * config['board_max_height_ratio'];
+        const size = Math.min(element.parentElement.clientWidth, max_size);
+
+        element.width = BoardContext.CANVAS_SIZE;
+        element.height = BoardContext.CANVAS_SIZE;
+
+        element.style.width = `${size}px`;
+        element.style.height = `${size}px`;
+
+        this.display();
     }
 
     init_canvas() {
@@ -183,7 +186,6 @@ class BoardContext {
         this.context = element.getContext('2d');
 
         object.element.addEventListener('click', (e) => {
-            console.log(e.target, e.offsetX, e.offsetY);
             this.click(e.offsetX, e.offsetY);
         });
     }
@@ -215,30 +217,6 @@ class BoardContext {
             case ConfigValue.MODE_BIG_SOLVE:
                 this.display_big_solve();
                 break;
-            // case ConfigValue.MODE_SMALL_SOLVE:
-            //     this.display_small_edit();
-            //     break;
-        }
-    }
-
-    click(x, y) {
-        const { mode } = this;
-        switch (mode) {
-            // case ConfigValue.MODE_BIG_SHOW:
-            //     this.display_big_show();
-            //     break;
-            // case ConfigValue.MODE_SMALL_SHOW:
-            //     this.display_small_show();
-            //     break;
-            case ConfigValue.MODE_BIG_EDIT:
-                this.click_big_edit(x, y);
-                break;
-            // case ConfigValue.MODE_SMALL_EDIT:
-            //     this.display_small_edit();
-            //     break;
-            // case ConfigValue.MODE_BIG_SOLVE:
-            //     this.display_big_solve();
-            //     break;
             // case ConfigValue.MODE_SMALL_SOLVE:
             //     this.display_small_edit();
             //     break;
@@ -295,12 +273,13 @@ class BoardContext {
     }
 
     display_small_show() {
-        const { element, context: ctx, board, small_x: x, small_y: y } = this;
+        const { element, context: ctx, board} = this;
+        const x = 0 | Utility.get_parameter('x');
+        const y = 0 | Utility.get_parameter('y');
+
         let { width: c_width, height: c_height } = element;
 
         const { large_width, large_height, small_width, small_height } = board;
-        const width = large_width * small_width;
-        const height = large_height * small_height;
 
         ctx.save();
         ctx.fillStyle = "#aaaaaa";
@@ -325,7 +304,7 @@ class BoardContext {
         }
 
         ctx.lineWidth = 2;
-
+        
         for (let i = 0; i <= small_height; i++) {
             ctx.beginPath();
             ctx.moveTo(0 | offset_x + (0) * small_width * gap, 0 | offset_y + (i) * gap);
@@ -413,6 +392,30 @@ class BoardContext {
         }
     }
 
+    click(x, y) {
+        const { mode } = this;
+        switch (mode) {
+            // case ConfigValue.MODE_BIG_SHOW:
+            //     this.display_big_show();
+            //     break;
+            // case ConfigValue.MODE_SMALL_SHOW:
+            //     this.display_small_show();
+            //     break;
+            case ConfigValue.MODE_BIG_EDIT:
+                this.click_big_edit(x, y);
+                break;
+            case ConfigValue.MODE_SMALL_EDIT:
+                this.click_small_edit(x, y);
+                break;
+            // case ConfigValue.MODE_BIG_SOLVE:
+            //     this.display_big_solve();
+            //     break;
+            // case ConfigValue.MODE_SMALL_SOLVE:
+            //     this.display_small_edit();
+            //     break;
+        }
+    }
+
     click_big_edit(x, y) {
         const { element, board } = this;
         const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
@@ -437,8 +440,40 @@ class BoardContext {
         if (!(0 <= cy && cy < large_height))
             return;
 
-        const pid = Utility.get_parameter('pid');
+        const pid = 0 | Utility.get_parameter('pid');
         location.href = `/edit/small?pid=${pid}&x=${cx}&y=${cy}`;
+    }
+
+    click_small_edit(x, y) {
+        const { element, board } = this;
+        const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
+
+        const { large_width, large_height, small_width, small_height } = board;
+        const width = small_width;
+        const height = small_height;
+
+        const r = config['board_context_padding_ratio'];
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        const cx = 0 | (x - offset_x) / (gap);
+        const cy = 0 | (y - offset_y) / (gap);
+
+        if (!(0 <= cx && cx < small_width))
+            return;
+        if (!(0 <= cy && cy < small_height))
+            return;
+
+        const lx = 0 | Utility.get_parameter('x');
+        const ly = 0 | Utility.get_parameter('y');
+        const value = board.data[ly * small_height + cy][lx * small_width + cx];
+        board.data[ly * small_height + cy][lx * small_width + cx] = 3 - value;
+
+        this.resize_element();
     }
 
     fillTile(x, y, w, h, type) {
@@ -527,7 +562,6 @@ class LocalStorageManager {
                 ((i + j) % 2 == 1)
             )
         );
-        console.log(retval);
         return retval;
     }
 }
