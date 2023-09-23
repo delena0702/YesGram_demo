@@ -17,11 +17,6 @@ function init() {
     
     const pid = 0 | (Utility.get_parameter('pid') ?? -1);
     let board = LocalStorageManager.get_board(pid);
-    if (board == null) {
-        // TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        alert("TEST_LOGIC!!");
-        board = Board.testtest();
-    }
     const img_board = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SHOW);
 
     const output = document.getElementById('output-puzzle-code');
