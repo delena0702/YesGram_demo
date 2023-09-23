@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, send_from_directory
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
+app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF')
 
 
 # 메인 페이지
