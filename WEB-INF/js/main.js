@@ -49,12 +49,16 @@ class Board {
     }
 
     static import(string) {
-        const obj = JSON.parse(atob(string));
-        const [large_width, large_height, small_width, small_height] = obj.size;
-        const board = new Board(large_width, large_height, small_width, small_height);
-        board.data = obj.data;
+        try {
+            const obj = JSON.parse(atob(string));
+            const [large_width, large_height, small_width, small_height] = obj.size;
+            const board = new Board(large_width, large_height, small_width, small_height);
+            board.data = obj.data;
 
-        return board
+            return board
+        } catch (e) {
+            return null;
+        }
     }
 
     static testtest() {
@@ -362,6 +366,17 @@ class BoardContext {
 class LocalStorageManager {
     static make_board_key(puzzle_id) {
         return `${storage_key_board}-${puzzle_id}`;
+    }
+
+    static get_empty_puzzle_id() {
+        for (let i = 1; i <= 100; i++) {
+            if (localStorage.getItem(this.make_board_key(i)))
+                continue;
+
+            return i;
+        }
+
+        return -1;
     }
 
     static get_board(puzzle_id) {
