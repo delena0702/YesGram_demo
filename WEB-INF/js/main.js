@@ -136,9 +136,8 @@ class BoardContext {
         this.board = board;
         this.mode = mode;
 
-        if (param) {
+        if (param)
             Object.assign(this, param);
-        }
 
         this.init();
     }
@@ -182,6 +181,11 @@ class BoardContext {
         const object = this;
         const { element } = this;
         this.context = element.getContext('2d');
+
+        object.element.addEventListener('click', (e) => {
+            console.log(e.target, e.offsetX, e.offsetY);
+            this.click(e.offsetX, e.offsetY);
+        });
     }
 
     fit_ratio() {
@@ -217,6 +221,30 @@ class BoardContext {
         }
     }
 
+    click(x, y) {
+        const { mode } = this;
+        switch (mode) {
+            // case ConfigValue.MODE_BIG_SHOW:
+            //     this.display_big_show();
+            //     break;
+            // case ConfigValue.MODE_SMALL_SHOW:
+            //     this.display_small_show();
+            //     break;
+            case ConfigValue.MODE_BIG_EDIT:
+                this.click_big_edit(x, y);
+                break;
+            // case ConfigValue.MODE_SMALL_EDIT:
+            //     this.display_small_edit();
+            //     break;
+            // case ConfigValue.MODE_BIG_SOLVE:
+            //     this.display_big_solve();
+            //     break;
+            // case ConfigValue.MODE_SMALL_SOLVE:
+            //     this.display_small_edit();
+            //     break;
+        }
+    }
+
     display_big_show() {
         const { element, context: ctx, board } = this;
         let { width: c_width, height: c_height } = element;
@@ -231,17 +259,17 @@ class BoardContext {
         ctx.lineWidth = 1;
 
         [c_width, c_height] = this.fit_ratio();
-        const gap = Math.min(0 | c_width / width, 0 | c_height / height);
+        let gap = Math.min(c_width / width, c_height / height);
         const offset_x = 0 | (c_width - gap * width) / 2;
         const offset_y = 0 | (c_height - gap * height) / 2;
 
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
                 this.fillTile(
-                    (j) * gap + offset_x,
-                    (i) * gap + offset_y,
-                    gap,
-                    gap,
+                    0 | (j) * gap + offset_x,
+                    0 | (i) * gap + offset_y,
+                    0 | gap + 1,
+                    0 | gap + 1,
                     board.data[i][j] + 100
                 );
             }
@@ -251,15 +279,15 @@ class BoardContext {
 
         for (let i = 0; i <= large_height; i++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (0) * width * gap, offset_y + (i) * small_height * gap);
-            ctx.lineTo(offset_x + (1) * width * gap, offset_y + (i) * small_height * gap);
+            ctx.moveTo(0 | offset_x + (0) * width * gap, 0 | offset_y + (i) * small_height * gap);
+            ctx.lineTo(0 | offset_x + (1) * width * gap, 0 | offset_y + (i) * small_height * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= large_width; j++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (j) * small_width * gap, offset_y + (0) * height * gap);
-            ctx.lineTo(offset_x + (j) * small_width * gap, offset_y + (1) * height * gap);
+            ctx.moveTo(0 | offset_x + (j) * small_width * gap, 0 | offset_y + (0) * height * gap);
+            ctx.lineTo(0 | offset_x + (j) * small_width * gap, 0 | offset_y + (1) * height * gap);
             ctx.stroke();
         }
 
@@ -280,17 +308,17 @@ class BoardContext {
         ctx.lineWidth = 1;
 
         [c_width, c_height] = this.fit_ratio();
-        const gap = Math.min(0 | c_width / small_width, 0 | c_height / small_height);
-        const offset_x = 0 | (c_width - gap * small_width) / 2;
-        const offset_y = 0 | (c_height - gap * small_height) / 2;
+        const gap = Math.min(c_width / small_width, c_height / small_height);
+        const offset_x = (c_width - gap * small_width) / 2;
+        const offset_y = (c_height - gap * small_height) / 2;
 
         for (let i = 0; i < small_height; i++) {
             for (let j = 0; j < small_width; j++) {
                 this.fillTile(
-                    offset_x + (j) * gap,
-                    offset_y + (i) * gap,
-                    gap,
-                    gap,
+                    0 | offset_x + (j) * gap,
+                    0 | offset_y + (i) * gap,
+                    0 | gap,
+                    0 | gap,
                     board.data[y * small_height + i][x * small_width + j]
                 );
             }
@@ -300,15 +328,15 @@ class BoardContext {
 
         for (let i = 0; i <= small_height; i++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (0) * small_width * gap, offset_y + (i) * gap);
-            ctx.lineTo(offset_x + (1) * small_width * gap, offset_y + (i) * gap);
+            ctx.moveTo(0 | offset_x + (0) * small_width * gap, 0 | offset_y + (i) * gap);
+            ctx.lineTo(0 | offset_x + (1) * small_width * gap, 0 | offset_y + (i) * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= small_width; j++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (j) * gap, offset_y + (0) * small_height * gap);
-            ctx.lineTo(offset_x + (j) * gap, offset_y + (1) * small_height * gap);
+            ctx.moveTo(0 | offset_x + (j) * gap, 0 | offset_y + (0) * small_height * gap);
+            ctx.lineTo(0 | offset_x + (j) * gap, 0 | offset_y + (1) * small_height * gap);
             ctx.stroke();
         }
 
@@ -340,9 +368,9 @@ class BoardContext {
 
         [c_width, c_height] = this.fit_ratio();
 
-        const gap = Math.min(0 | c_width / width, 0 | c_height / height);
-        const offset_x = 0 | (c_width - gap * width) / 2;
-        const offset_y = 0 | (c_height - gap * height) / 2;
+        const gap = Math.min(c_width / width, c_height / height);
+        const offset_x = (c_width - gap * width) / 2;
+        const offset_y = (c_height - gap * height) / 2;
 
         ctx.font = `${0 | small_height * gap / 3}px consolas`;
         ctx.textAlign = "center";
@@ -356,15 +384,15 @@ class BoardContext {
 
                 ctx.fillStyle = "#888888";
                 ctx.fillRect(
-                    offset_x + (j) * small_width * gap,
-                    offset_y + (i) * small_height * gap,
-                    (1) * small_width * gap,
-                    (1) * small_height * gap);
+                    0 | offset_x + (j) * small_width * gap,
+                    0 | offset_y + (i) * small_height * gap,
+                    0 | (1) * small_width * gap,
+                    0 | (1) * small_height * gap);
 
                 ctx.fillStyle = "#ffffff";
                 ctx.fillText("?",
-                    offset_x + (j + 0.5) * small_width * gap,
-                    offset_y + (i + 0.5) * small_height * gap);
+                    0 | offset_x + (j + 0.5) * small_width * gap,
+                    0 | offset_y + (i + 0.5) * small_height * gap);
             }
         }
 
@@ -372,17 +400,45 @@ class BoardContext {
 
         for (let i = 0; i <= large_height; i++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (0) * width * gap, offset_y + (i) * small_height * gap);
-            ctx.lineTo(offset_x + (1) * width * gap, offset_y + (i) * small_height * gap);
+            ctx.moveTo(0 | offset_x + (0) * width * gap, 0 | offset_y + (i) * small_height * gap);
+            ctx.lineTo(0 | offset_x + (1) * width * gap, 0 | offset_y + (i) * small_height * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= large_width; j++) {
             ctx.beginPath();
-            ctx.moveTo(offset_x + (j) * small_width * gap, offset_y + (0) * height * gap);
-            ctx.lineTo(offset_x + (j) * small_width * gap, offset_y + (1) * height * gap);
+            ctx.moveTo(0 | offset_x + (j) * small_width * gap, 0 | offset_y + (0) * height * gap);
+            ctx.lineTo(0 | offset_x + (j) * small_width * gap, 0 | offset_y + (1) * height * gap);
             ctx.stroke();
         }
+    }
+
+    click_big_edit(x, y) {
+        const { element, board } = this;
+        const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
+
+        const { large_width, large_height, small_width, small_height } = board;
+        const width = large_width * small_width;
+        const height = large_height * small_height;
+
+        const r = config['board_context_padding_ratio'];
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        const cx = 0 | (x - offset_x) / (gap * small_width);
+        const cy = 0 | (y - offset_y) / (gap * small_height);
+
+        if (!(0 <= cx && cx < large_width))
+            return;
+        if (!(0 <= cy && cy < large_height))
+            return;
+
+        const pid = Utility.get_parameter('pid');
+        location.href = `/edit/small?pid=${pid}&x=${cx}&y=${cy}`;
     }
 
     fillTile(x, y, w, h, type) {
