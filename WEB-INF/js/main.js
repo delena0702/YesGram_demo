@@ -126,6 +126,7 @@ class BoardContext {
     small_y
     mode
     solve_data
+    change_stack
 
     static CANVAS_SIZE = 500
 
@@ -134,6 +135,7 @@ class BoardContext {
         this.context = null;
         this.board = board;
         this.mode = mode;
+        this.change_stack = [];
 
         if (param)
             Object.assign(this, param);
@@ -473,6 +475,7 @@ class BoardContext {
         const value = board.data[ly * small_height + cy][lx * small_width + cx];
         board.data[ly * small_height + cy][lx * small_width + cx] = 3 - value;
 
+        this.change_stack.push([lx * small_width + cx, ly * small_height + cy]);
         this.resize_element();
     }
 
@@ -501,6 +504,13 @@ class BoardContext {
                 break;
         }
         ctx.restore();
+    }
+
+    get_last_change() {
+        const { change_stack } = this;
+        if (change_stack.length == 0)
+            return null;
+        return change_stack.pop();
     }
 }
 
