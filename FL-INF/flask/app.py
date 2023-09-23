@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 
 # 메인 페이지
@@ -10,7 +10,7 @@ def index():
 
 # 퍼즐을 이미지로 생성
 @app.route('/generate/image/select', methods=['GET'])    
-def imageSelect():
+def generate_image1():
     return render_template('generate_image1.html')
 
 
