@@ -15,8 +15,17 @@ function init() {
         Utility.copy_to_clipboard(document.getElementById('output-puzzle-code'));
     });
     
-    const pid = 0 | (new URL(location.href).searchParams.get('pid') ?? -1);
-    const img_board = new BoardContext('img-board', Board.testtest(), ConfigValue.MODE_BIG_SHOW);
+    const pid = 0 | (Utility.get_parameter('pid') ?? -1);
+    let board = LocalStorageManager.get_board(pid);
+    if (board == null) {
+        // TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        alert("TEST_LOGIC!!");
+        board = Board.testtest();
+    }
+    const img_board = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SHOW);
+
+    const output = document.getElementById('output-puzzle-code');
+    output.value = board.export();
 }
 
 init();

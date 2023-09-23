@@ -403,4 +403,8 @@ class Utility {
         const textarea = element;
         navigator.clipboard.writeText(textarea.value);
     }
+
+    static get_parameter(key) {
+        return new URL(location.href).searchParams.get(key);
+    }
 }
