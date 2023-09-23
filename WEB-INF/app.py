@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_from_directory
 
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 
@@ -6,7 +6,8 @@ app = Flask(__name__, static_url_path='/static', static_folder='static')
 # 메인 페이지
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    return send_from_directory('static', 'index.html')
+    # return render_template('index.html')
 
 # 퍼즐을 이미지로 생성
 @app.route('/generate/image/select', methods=['GET'])    
@@ -28,7 +29,8 @@ def manual():
 # 퍼즐 생성 방식
 @app.route('/generate/select', methods=['GET'])    
 def select():
-    return render_template('generate_select.html')
+    return send_from_directory('static', 'generate_select.html')
+    # return render_template('generate_select.html')
 
 # 퍼즐 목록
 @app.route('/list', methods=['GET'])    
