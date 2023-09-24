@@ -519,6 +519,10 @@ class LocalStorageManager {
         return `${storage_key_board}-${puzzle_id}`;
     }
 
+    static make_solved_data_key(puzzle_id) {
+        return `${storage_key_solve_data}-${puzzle_id}`;
+    }
+
     static get_empty_puzzle_id() {
         const list = JSON.parse(localStorage.getItem(storage_key_board_list) ?? '[]');
         for (let i = 1; i <= 1000; i++) {
@@ -545,12 +549,28 @@ class LocalStorageManager {
         const key = LocalStorageManager.make_board_key(puzzle_id);
         const list = new Set(JSON.parse(localStorage.getItem(storage_key_board_list) ?? '[]'));
 
+        const pre_puzzle = localStorage.getItem(key);
+        const puzzle = board.export();
+
+        if (pre_puzzle == puzzle)
+            return;
+
+        const solved_data_key = LocalStorageManager.make_solved_data_key(puzzle_id);
+
         if (board == null) {
             localStorage.removeItem(key);
+            localStorage.removeItem(solved_data_key);
             list.delete(puzzle_id);
         }
         else {
-            localStorage.setItem(key, board.export());
+            const solved_data = Array.from({ length: board.large_height }, () =>
+                Array.from({ length: board.large_width }, () =>
+                    0
+                )
+            );
+
+            localStorage.setItem(key, puzzle);
+            localStorage.setItem(solved_data_key, JSON.stringify(solved_data));
             list.add(puzzle_id);
         }
 
@@ -558,8 +578,18 @@ class LocalStorageManager {
     }
 
     static get_solve_data(puzzle_id) {
-        // todo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return LocalStorageManager.testtest()
+        const key = LocalStorageManager.make_solved_data_key(puzzle_id);
+        const solved_data = localStorage.getItem(key);
+        if (!solved_data) {
+            alert("TEST CASES testset!!!!!");
+            return LocalStorageManager.testtest();
+        }
+
+        try {
+            return JSON.parse(solved_data);
+        } catch (e) {
+            return null;
+        }
     }
 
     static set_solve_data(puzzle_id, data) {
@@ -567,8 +597,8 @@ class LocalStorageManager {
     }
 
     static testtest() {
-        const retval = Array.from({ length: 10 }, (_, i) =>
-            Array.from({ length: 5 }, (_, j) =>
+        const retval = Array.from({ length: 15 }, (_, i) =>
+            Array.from({ length: 11 }, (_, j) =>
                 ((i + j) % 2 == 1)
             )
         );

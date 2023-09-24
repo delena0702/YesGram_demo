@@ -12,8 +12,7 @@ function init() {
     document.getElementById('button-return').addEventListener('click', return_page);
 }
 
-function undo(){
-    // board_context = new BoardContext();
+function undo() {
     const change = board_context.get_last_change();
 
     if (change == null)
@@ -25,7 +24,7 @@ function undo(){
     board_context.resize_element();
 }
 
-function reset(){
+function reset() {
     const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
 
@@ -33,11 +32,11 @@ function reset(){
     board_context.resize_element();
 }
 
-function check(){
+function check() {
     // TODO
 }
 
-function save(){
+function save() {
     const pid = 0 | Utility.get_parameter('pid');
     LocalStorageManager.set_board(pid, board_context.board);
     alert("저장되었습니다.");
@@ -61,6 +60,7 @@ function return_page() {
             }
         }
     }
+
     location.href = `/edit/big?pid=${pid}`;
 }
 
