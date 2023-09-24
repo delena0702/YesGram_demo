@@ -420,7 +420,10 @@ class BoardContext {
 
     click_big_edit(x, y) {
         const { element, board } = this;
-        const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
+        const { width: c_width, height: c_height } = element;
+
+        x = x * (0 | element.width) / element.clientWidth;
+        y = y * (0 | element.height) / element.clientHeight;
 
         const { large_width, large_height, small_width, small_height } = board;
         const width = large_width * small_width;
@@ -448,9 +451,12 @@ class BoardContext {
 
     click_small_edit(x, y) {
         const { element, board } = this;
-        const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
+        const { width: c_width, height: c_height } = element;
 
-        const { small_width, small_height } = board;
+        x = x * (0 | element.width) / element.clientWidth;
+        y = y * (0 | element.height) / element.clientHeight;
+
+        const { large_width, large_height, small_width, small_height } = board;
         const width = small_width;
         const height = small_height;
 
@@ -498,13 +504,6 @@ class BoardContext {
         const offset_x = r * c_width + (real_width - gap * width) / 2;
         const offset_y = r * c_height + (real_height - gap * height) / 2;
 
-        // Debug
-        const context = this.context;
-        context.resetTransform();
-        context.fillStyle = "#ff0000";
-        context.fillRect(x, y, 10, 10);
-        context.fillRect(0, 0, 10, 10);
-
         const cx = 0 | (x - offset_x) / (gap * small_width);
         const cy = 0 | (y - offset_y) / (gap * small_height);
 
@@ -512,7 +511,7 @@ class BoardContext {
             return;
         if (!(0 <= cy && cy < large_height))
             return;
-        
+
         const pid = 0 | Utility.get_parameter('pid');
         location.href = `/solve/small?pid=${pid}&x=${cx}&y=${cy}`;
     }
