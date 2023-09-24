@@ -58,7 +58,16 @@
           <div>
             <h2 class="fw-light">Step 1. 이미지 선택하기</h2>
             <div class="mb-3">
-            <input type="file" class="form-control form-control-lg" aria-label="Large file input example">
+            <input type="file" class="form-control form-control-lg" aria-label="Large file input example" accept="image/*" name="file" onchange="fileCheck(this);">
+            <script type="text/javascript"> 
+              function fileCheck(el) { 
+                  if(!/\.(jpeg|jpg|png|gif|bmp)$/i.test(el.value)){ 
+                      alert('이미지 파일만 업로드 가능합니다.'); 
+                      el.value = ''; 
+                      el.focus(); 
+                  }
+              }
+              </script>
             </div>
           </div>
           <div>
