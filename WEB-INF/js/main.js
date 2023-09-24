@@ -80,7 +80,7 @@ class Board {
                     2
                 )
             );
-            
+
             let original_string = obj.data;
             let idx = 0;
             for (let i = 0; i < original_string.length; i++) {
@@ -275,7 +275,7 @@ class BoardContext {
     }
 
     display_small_show() {
-        const { element, context: ctx, board} = this;
+        const { element, context: ctx, board } = this;
         const x = 0 | Utility.get_parameter('x');
         const y = 0 | Utility.get_parameter('y');
 
@@ -306,7 +306,7 @@ class BoardContext {
         }
 
         ctx.lineWidth = 2;
-        
+
         for (let i = 0; i <= small_height; i++) {
             ctx.beginPath();
             ctx.moveTo(0 | offset_x + (0) * small_width * gap, 0 | offset_y + (i) * gap);
@@ -409,9 +409,9 @@ class BoardContext {
             case ConfigValue.MODE_SMALL_EDIT:
                 this.click_small_edit(x, y);
                 break;
-            // case ConfigValue.MODE_BIG_SOLVE:
-            //     this.display_big_solve();
-            //     break;
+            case ConfigValue.MODE_BIG_SOLVE:
+                this.click_big_solve(x, y);
+                break;
             // case ConfigValue.MODE_SMALL_SOLVE:
             //     this.display_small_edit();
             //     break;
@@ -450,7 +450,7 @@ class BoardContext {
         const { element, board } = this;
         const [c_width, c_height] = [parseInt(element.style.width), parseInt(element.style.height)];
 
-        const { large_width, large_height, small_width, small_height } = board;
+        const { small_width, small_height } = board;
         const width = small_width;
         const height = small_height;
 
@@ -477,6 +477,44 @@ class BoardContext {
 
         this.change_stack.push([lx * small_width + cx, ly * small_height + cy]);
         this.resize_element();
+    }
+
+    click_big_solve(x, y) {
+        const { element, board } = this;
+        const { width: c_width, height: c_height } = element;
+
+        x = x * (0 | element.width) / element.clientWidth;
+        y = y * (0 | element.height) / element.clientHeight;
+
+        const { large_width, large_height, small_width, small_height } = board;
+        const width = large_width * small_width;
+        const height = large_height * small_height;
+
+        const r = config['board_context_padding_ratio'];
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        // Debug
+        const context = this.context;
+        context.resetTransform();
+        context.fillStyle = "#ff0000";
+        context.fillRect(x, y, 10, 10);
+        context.fillRect(0, 0, 10, 10);
+
+        const cx = 0 | (x - offset_x) / (gap * small_width);
+        const cy = 0 | (y - offset_y) / (gap * small_height);
+
+        if (!(0 <= cx && cx < large_width))
+            return;
+        if (!(0 <= cy && cy < large_height))
+            return;
+        
+        const pid = 0 | Utility.get_parameter('pid');
+        location.href = `/solve/small?pid=${pid}&x=${cx}&y=${cy}`;
     }
 
     fillTile(x, y, w, h, type) {
@@ -538,7 +576,7 @@ class LocalStorageManager {
         const key = LocalStorageManager.make_board_key(puzzle_id);
         const puzzle = localStorage.getItem(key);
         if (!puzzle) {
-            alert("TEST CASES!!!!!");
+            alert("TEST CASES - board!!!!!");
             return Board.testtest(1);
         }
 
@@ -581,7 +619,7 @@ class LocalStorageManager {
         const key = LocalStorageManager.make_solved_data_key(puzzle_id);
         const solved_data = localStorage.getItem(key);
         if (!solved_data) {
-            alert("TEST CASES testset!!!!!");
+            alert("TEST CASES - solved_data!!!!!");
             return LocalStorageManager.testtest();
         }
 
