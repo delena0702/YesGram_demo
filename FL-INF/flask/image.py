@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 
@@ -13,7 +13,7 @@ def allowed_file(filename):
 
 @app.route("/")
 def hello_world():
-    return render_template('upload.html')
+    return send_from_directory('static', 'upload.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
