@@ -3,6 +3,12 @@ import sys
 import numpy as np
 import matplotlib.pylab as plt
 import json
+from enum import Enum
+
+class Threshold(Enum):
+    OTSU=1
+    AVERAGE=2
+    GAUSSIAN=3
 
 class ImagePreprocessing:
     def __init__(self, src) -> None:
@@ -85,6 +91,25 @@ class ImageVisualization:
 
         return p
     
+    # src1: input image, src2: 
+    def printMatchRate(_src1, _src2):
+        r_src1 = _src1.ravel()
+        r_src2 = _src2.ravel()
+        
+        total = 0
+        cnt = 0
+        for i in range(0, r_src1.size):
+            if(r_src1[i] == 0):
+                total += 1
+                if(r_src1[i] == r_src2[i]):
+                    cnt += 1
+        
+        p = round((cnt / total) * 100, 2)
+        
+        print(f"Edge match rate: {p}%")
+        return p
+
+    
     # 2개의 이미지와 히스토그램 출력 함수
     def print2ImageNHist(_src1, name1, _src2, name2):
         _src1, h, w = ImagePreprocessing.modifyImageSize(_src1)
@@ -126,12 +151,19 @@ class ImageVisualization:
                     verticalalignment = 'top')
             
             ImageVisualization.printHist(_src1)
-                
         plt.show()
-
-class ImageInputProcessor:
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    
+    
+    # 처리한 이미지 비교 UI - Edge Detection
+    def print4Srcs(name1, _src1, name2, _src2, name3, _src3, name4, _src4):
+        res = {name1 : _src1, name2 : _src2, name3: _src3, name4: _src4}
+        for i , (key, value) in enumerate(res.items()):
+            plt.subplot(221 + i)
+            plt.title(key)
+            plt.imshow(value, cmap= 'gray')
+            plt.xticks([]);plt.yticks([]) 
+                        
+        plt.show()
 
 
 class ImageOutputProcessor:
@@ -194,7 +226,7 @@ class ImageThresholding:
         return _src, dst
 
     # Ostu's Method
-    def OstuMethod(_src, dist = 5, sigma = 100, clahe = False, width = 100, height = 100):
+    def OtsuMethod(_src, dist = 5, sigma = 100, clahe = False, width = 100, height = 100):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
             
         if(clahe):
@@ -269,13 +301,14 @@ class ImageThresholding:
         return thr_aver, thr_gaus
 
 class ImageEdgeDetection:
-    def CannyOperator(_src, low = 0, high = 255, dist = 5, sigma = 100, clahe = False, width=100, height=100):
+    def CannyOperator(_src, low = 0, high = 255, bi= True, dist = 5, sigma = 100, clahe = False, width=100, height=100, color=False):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
         if(clahe):
-             _src = ImagePreprocessing.CLAHE(_src)
+            _src = ImagePreprocessing.CLAHE(_src)
 
         _src= ImagePreprocessing.modifyImageSize(_src, width, height)
-        _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
+        if(color):
+            _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
         canny = cv2.Canny(_src, low, high)
         mask = canny == 0
@@ -284,17 +317,53 @@ class ImageEdgeDetection:
 
         return mask
 
+# 이미지 테스트 함수입니다.
+class ImageTest:
+    def edgeTest(_src, width, height, method):
+        t1, otsu = ImageThresholding.OtsuMethod(_src, clahe= True, width = 100, height = 100)
+        if(method == Threshold.OTSU):
+            otsu_canny = ImageEdgeDetection.CannyOperator(otsu, t1/2, t1, bi=False, clahe=False)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+
+            rate = ImageVisualization.printMatchRate(src_canny, otsu_canny)
+
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(src, width=100, height=100),
+                                            'Ostu method: ', otsu, 'Original + canny: ',src_canny, "Otsu + canny", otsu_canny)
+        elif(method == Threshold.AVERAGE):
+            aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
+
+            aver_canny = ImageEdgeDetection.CannyOperator(aver, t1/2, t1, bi=False, clahe=False)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+
+            rate = ImageVisualization.printMatchRate(src_canny, aver_canny)
+
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(src, width=100, height=100),
+                                            'Adaptive-average: ', aver, 'Original + canny: ',src_canny, "Average + canny", aver_canny)
+
+        elif(method == Threshold.GAUSSIAN):
+            aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
+
+            gaus_canny = ImageEdgeDetection.CannyOperator(gaus, t1/2, t1, bi=False, clahe=False)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+
+            rate = ImageVisualization.printMatchRate(src_canny, gaus_canny)
+
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(src, width=100, height=100),
+                                            'Adaptive-gaussian: ', gaus, 'Original + canny: ',src_canny, "Gaussian + canny", gaus_canny)
+
+    
+    def intensityTest(_src, width, height, method):
+        return 1
+        
+
 def ImageProcessor(src, width, height):
     src = cv2.imread(src, cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
         sys.exit()
-
-    # if src is not np:
-    #     return f'src type: {type(src)}'
     
     #서버에서 적절한 파일명을 가진 src가 전달되었다고 가정,
-    t1, otsu = ImageThresholding.OstuMethod(src, clahe=True, width=width, height=height)
+    t1, otsu = ImageThresholding.OtsuMethts(src, clahe=True, width=width, height=height)
     aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
     
     # 255 -> 1
@@ -311,30 +380,24 @@ def ImageProcessor(src, width, height):
 
     return json.dumps(json_obj)
 
-
 if __name__ == '__main__':
     # 원하는 이미지의 경로 - 파일명 입력
-    src = cv2.imread("./image/nature1.jpg", cv2.IMREAD_COLOR)
+    src = cv2.imread("ImageProcessor/image/nature1.jpg", cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
         sys.exit()
 
-    print(type(src))
-    # json_res = ImageProcessor(src, 100)
-    # print(type(json_res))
+    ImageTest.edgeTest(src, 100, 100, Threshold.AVERAGE)
 
-    #원하는 방법 실행
-    t1, res1 = ImageThresholding.OstuMethod(src, clahe= True, width = 100, height = 100)
+    # aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width = 100, height = 100)
+    # aver2, gaus2 = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=False, width = 100, height = 100)
 
-    aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width = 100, height = 100)
-    aver2, gaus2 = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=False, width = 100, height = 100)
+    # p2 = ImageVisualization.printPercentage(aver)
+    # p = ImageVisualization.printPercentage(gaus)
 
 
-    p2 = ImageVisualization.printPercentage(aver)
-    p = ImageVisualization.printPercentage(gaus)
-
-
-    ImageVisualization.print3Srcs('image: ',src, 'Closing Aver: ', aver, 'Closing Gaus: ', gaus, Hist_num=True)
+    # ImageVisualization.print3Srcs('image: ',src, 'Closing Aver: ', aver, 'Closing Gaus: ', gaus, Hist_num=True)
+    
 
 
     cv2.waitKey()
