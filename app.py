@@ -1,12 +1,18 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, render_template, jsonify
 from werkzeug.utils import secure_filename
+import os
 
 from ImageProcessor import kmean
 
-app = Flask(__name__, static_url_path='/WEB-INF/static', static_folder='static')
-
 # 이미지 확장자 제한 - 추후 변경 가능
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+UPLOAD_FOLDER = 'WEB-INF\\image'
+
+app = Flask(__name__, static_url_path='/WEB-INF/static', static_folder='static')
+app = Flask(__name__, template_folder='templates')
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # 파일 확장자 검사
 def allowed_file(filename):
@@ -33,16 +39,18 @@ def uploadImage():
 def uploadImageResult():
     # 파일 이름: <image>를 요청함
     img = request.files['image']
+    
+    #이미지 파일 없음
     if not img:
         return send_from_directory('WEB-INF/static', '404.html')
     
+    # 이미지 확장자 불일치
     if not allowed_file(img.filename):
         return send_from_directory('WEB-INF/static', '404.html')
 
-    imgname = secure_filename(img.filename)
-    img_name = hashlib.md5(str(dt.datetime.now()).encode('utf-8')).hexdigest()
-    img_path = os.path.join('static/img', img_name + os.path.splitext(img.filename)[-1])
-
+    img_name = secure_filename(img.filename)
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
+    img.save(img_path)
     
     # 변수 이름: <width, height> 값을 요청함 - 일단 들어온다고 가정하겠습니다.
     # width = int(request.form['width'])
@@ -52,13 +60,15 @@ def uploadImageResult():
     # row = int(request.form['row'])
     # column = int(request.form['column'])
     
-    # res: JSON 형식 파일
-    # 함수 이름 바꿔야겠다
-    segmented_image = kmean.ImageProcessor(img, 100, 100)
-    print(segmented_image)
+    # 이미지 처리 결과
+    segmented_image = kmean.ImageProcessor(img_path, 100, 100)
+    
     # 처리된 이미지 전달 어떻게?
     
-    return send_from_directory('WEB-INF/static', 'generate_image2.html')
+    # 결과 전달 테스트용
+    # return render_template('upload_test.html', json_data=segmented_image)
+    
+    return send_from_directory('WEB-INF/static', 'upload_test.html', )
 
 
 # 퍼즐을 직접 생성합니다.

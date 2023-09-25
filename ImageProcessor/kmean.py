@@ -141,7 +141,7 @@ class ImageOutputProcessor:
         if(path is not None):
             np.savetxt(path, dst, fmt='%d', delimiter=',')
             
-        return dst
+        return dst.tolist()
 
 class ImagePostprocessing:
     # 이미지를 반전하는 함수(검은색 -> 흰색)
@@ -285,6 +285,14 @@ class ImageEdgeDetection:
         return mask
 
 def ImageProcessor(src, width, height):
+    src = cv2.imread(src, cv2.IMREAD_COLOR)
+    if src is None:
+        print("Image load failed!")
+        sys.exit()
+
+    # if src is not np:
+    #     return f'src type: {type(src)}'
+    
     #서버에서 적절한 파일명을 가진 src가 전달되었다고 가정,
     t1, otsu = ImageThresholding.OstuMethod(src, clahe=True, width=width, height=height)
     aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
@@ -295,22 +303,23 @@ def ImageProcessor(src, width, height):
     gaus = ImageOutputProcessor.imageOutput(gaus, None)
     
     # json 리턴 - '방식'은 이후 바뀔 수 있음
-    json_obj = {
-        '방식 1': otsu,
-        '방식 2': aver,
-        '방식 3': gaus
-    }
+    json_obj = [
+        {'방식 1': otsu},
+        {'방식 2': aver},
+        {'방식 3': gaus}
+    ]
 
-    return json_obj
+    return json.dumps(json_obj)
 
 
 if __name__ == '__main__':
     # 원하는 이미지의 경로 - 파일명 입력
-    src = cv2.imread("./images/nature1.jpg", cv2.IMREAD_COLOR)
+    src = cv2.imread("./image/nature1.jpg", cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
         sys.exit()
 
+    print(type(src))
     # json_res = ImageProcessor(src, 100)
     # print(type(json_res))
 
