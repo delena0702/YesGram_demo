@@ -3,6 +3,8 @@ import sys
 import numpy as np
 import matplotlib.pylab as plt
 import json
+import math
+import time
 from enum import Enum
 
 class Threshold(Enum):
@@ -19,24 +21,7 @@ class ImagePreprocessing:
         _src = cv2.resize(_src, (width, height))
         return _src
     
-        # # 이미지 크기
-        # if(gray):
-        #     h, w = _src.shape
-        # else:
-        #     h, w, c = _src.shape
 
-        # 이미지 비율로 자르기
-        # if(h > w):
-        #     _src = cv2.resize(_src, ((int)(size * w / h), size))
-        # else:
-        #     _src = cv2.resize(_src, (size, (int)(size * h / w)))
-        
-    
-    # # 이미지를 원래 크기로 복원하는 함수
-    # def increaseImageSize(src, h, w):
-    #     src = cv2.resize(src, dsize = (w, h), interpolation=cv2.INTER_CUBIC)
-
-    #     return src
     def minMaxStretching(src):
         # 0과 1로 정규화하고 255를 곱해 Stretching함
         src = cv2.normalize(src, None, 0, 1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
@@ -45,17 +30,10 @@ class ImagePreprocessing:
         return src
 
     def CLAHE(src, clip = 3.0, tsize = 8):
-        # src = cv2.cvtColor(src, cv2.COLOR_RGB2HSV)
-        
         dst = src.copy()
         
         clahe = cv2.createCLAHE(clipLimit=clip, tileGridSize=(tsize, tsize))
-        # dst[:, :, 0] = clahe.apply(dst[:, :, 0])
         dst = clahe.apply(dst)
-
-        # dst = clahe.apply(src)
-        # dst = cv2.cvtColor(dst, cv2.COLOR_HSV2RGB)
-
         return dst
 
     def HE(src):
@@ -126,12 +104,15 @@ class ImageVisualization:
         total = 0
         cnt = 0
         for i in range(0, r_src1.size):
-            if(r_src2[i] == 0):
+            if(r_src1[i] == 0):
                 total += 1
                 if(r_src1[i] == r_src2[i]):
                     cnt += 1
         
-        p = round((cnt / total) * 100, 2)
+        if(total != 0):
+            p = round((cnt / total) * 100, 2)
+        else:
+            p = 0
         
         print(f"Edge match rate: {p}%")
         return p
@@ -253,7 +234,7 @@ class ImageSegmentation:
         return _src, dst
 
     # Ostu's Method
-    def otsuMethod(_src, dist = 5, sigma = 100, clahe = False, width = 100, height = 100):
+    def otsuMethod(_src, dist = 5, sigma = 100, clahe = False, width=100, height=100):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
             
         if(clahe):
@@ -269,21 +250,21 @@ class ImageSegmentation:
 
     # blk_size: 이미지를 몇등분 하는가? (n x n)
     # C: threshold 값에서 가감할 상수
-    def adaptiveThreshold(_src, blk_size = 7, C = 4, dist = 3, sigma = 10, closing = False, width = 100, height = 100):
+    def adaptiveThreshold(_src, blk_size = 7, C = 4, dist = 3, sigma = 10, closing = False, width = 100, height = 100, method=Threshold.AVERAGE):
         h, w = _src.shape
 
         if(closing):
             if(h>= 1000 and w >= 1000):
                 _src= ImagePreprocessing.modifyImageSize(_src, (int)(w/2), (int)(h/2))
 
-                w_rat = ((int)(w/2) / width)
+                w_rat = (int)((w/2) / width)
                 if(w_rat % 2 == 0):
                     w_rat -= 1
                 
             elif(h >= 500 and w >= 500):
                 _src= ImagePreprocessing.modifyImageSize(_src, (int)(w*1.2), (int)(h*1.2))
 
-                w_rat = ((int)(w*1.2) / width)
+                w_rat = (int)((w*1.2) / width)
                 if(w_rat % 2 == 0):
                     w_rat -= 1
             else:
@@ -293,9 +274,9 @@ class ImageSegmentation:
                 
                 _src = ImagePreprocessing.modifyImageSize(_src, 500, 500)
 
-                h_rat = (int)(500 / height)
-                if(h_rat % 2 == 0):
-                    h_rat -= 1
+                # h_rat = (int)(500 / height)
+                # if(h_rat % 2 == 0):
+                #     h_rat -= 1
                 
                 w_rat = (int)(500 / width)
                 if(w_rat % 2 == 0):
@@ -312,33 +293,52 @@ class ImageSegmentation:
             # _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
             kernel = np.ones((3, 3), np.uint8)
-            thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
-            thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
+            
+            if(method==Threshold.AVERAGE):
+                res = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
+                
+                # Closing
+                res = cv2.erode(res, kernel, iterations=1)
+                res = cv2.dilate(res, kernel, iterations=1)
+                
+                # Downscale image
+                res = ImagePreprocessing.modifyImageSize(res, width, height)
+                
+                res = cv2.adaptiveThreshold(res, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
 
-            # thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
-            # thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
+            elif(method==Threshold.GAUSSIAN):
+                res = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
+                
+                # Closing
+                res = cv2.erode(res, kernel, iterations=1)
+                res = cv2.dilate(res, kernel, iterations=1)
+
+                res = ImagePreprocessing.modifyImageSize(res, width, height)
+                
+                res = cv2.adaptiveThreshold(res, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
 
 
-            thr_aver = cv2.erode(thr_aver, kernel, iterations=1)
-            thr_aver = cv2.dilate(thr_aver, kernel, iterations=1)
+            # thr_aver = cv2.erode(thr_aver, kernel, iterations=1)
+            # thr_aver = cv2.dilate(thr_aver, kernel, iterations=1)
 
-            thr_aver= ImagePreprocessing.modifyImageSize(thr_aver, width, height)
-            thr_gaus= ImagePreprocessing.modifyImageSize(thr_gaus, width, height)
+            # thr_aver= ImagePreprocessing.modifyImageSize(thr_aver, width, height)
+            # thr_gaus= ImagePreprocessing.modifyImageSize(thr_gaus, width, height)
 
-            thr_aver = cv2.adaptiveThreshold(thr_aver, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
-            thr_gaus = cv2.adaptiveThreshold(thr_gaus, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
+            # thr_aver = cv2.adaptiveThreshold(thr_aver, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
+            # thr_gaus = cv2.adaptiveThreshold(thr_gaus, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
 
-        else:
-            _src = ImagePreprocessing.modifyImageSize(_src, width, height)
-            _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
+        # else:
+        #     _src = ImagePreprocessing.modifyImageSize(_src, width, height)
+        #     _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
 
-            # _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
+        #     # _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
         
-            thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
-            thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
+        #     thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
+        #     thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
 
         
-        return thr_aver, thr_gaus
+        # return thr_aver, thr_gaus
+        return res
 
 class ImageEdgeDetection:
     def CannyOperator(_src, low = 0, high = 255, bi= True, dist = 5, sigma = 100, clahe = False, width=100, height=100, color=False):
@@ -347,55 +347,82 @@ class ImageEdgeDetection:
             _src = ImagePreprocessing.CLAHE(_src)
 
         _src= ImagePreprocessing.modifyImageSize(_src, width, height)
-        if(color):
-            _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
         canny = cv2.Canny(_src, low, high)
         mask = canny == 0
-
-        # dst = _src * (mask[:, :, None].astype(_src.dtype))
 
         return mask
 
 # 이미지 테스트 함수입니다.
 class ImageTest:
     def imageSegPreview(_src, width=100, height=100):
-        t1, otsu = ImageSegmentation.otsuMethod(_src, clahe= True, width = 100, height = 100)
-        aver, gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, width=width, height=height)
-        ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=100, height=100),
+        
+        total = 0
+        
+        start = time.time()
+        t1, otsu = ImageSegmentation.otsuMethod(_src, clahe= True, width=width, height=height)
+        end = time.time()
+        
+        
+        total += end - start
+        print(f"Otsu: {(end - start)*1000:.1f} ms")
+        
+        start = time.time()
+        aver = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, 
+                                                width=width, height=height, method=Threshold.AVERAGE)
+        end = time.time()
+        total += end - start
+        print(f"Average: {(end - start)*1000:.1f} ms")
+        
+        dst = aver.astype(float) / 255
+        print(dst)
+        
+        start = time.time()
+        gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, 
+                                                width=width, height=height, method=Threshold.GAUSSIAN)
+        end = time.time()
+        total += end - start
+        print(f"Average: {(end - start)*1000:.1f} ms")
+        
+        print(f"Total: {total*1000:.1f} ms")
+        
+        ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=width, height=height),
                                     'Ostu method: ', otsu, 'Adaptive-Average: ',aver, "Adaptive-Gaussian", gaus)
         
     
     def edgeTest(_src, width, height, method):
-        t1, otsu = ImageSegmentation.otsuMethod(_src, clahe= True, width = 100, height = 100)
+        t1, otsu = ImageSegmentation.otsuMethod(_src, clahe= True, width=width, height=height)
         if(method == Threshold.OTSU):
-            otsu_canny = ImageEdgeDetection.CannyOperator(otsu, t1/2, t1, bi=False, clahe=False)
-            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+            otsu_canny = ImageEdgeDetection.CannyOperator(otsu, t1/2, t1, bi=False, clahe=False, width=width, height=height)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, width=width, height=height)
 
             rate = ImageVisualization.printMatchRate(src_canny, otsu_canny)
 
-            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=100, height=100),
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=width, height=height),
                                             'Ostu method: ', otsu, 'Original + canny: ',src_canny, "Otsu + canny", otsu_canny)
         elif(method == Threshold.AVERAGE):
-            aver, gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, width=width, height=height)
+            
+            res = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True,
+                                                    width=width, height=height, method=Threshold.AVERAGE)
 
-            aver_canny = ImageEdgeDetection.CannyOperator(aver, t1/2, t1, bi=False, clahe=False)
-            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+            aver_canny = ImageEdgeDetection.CannyOperator(res, t1/2, t1, bi=False, clahe=False, width=width, height=height)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, width=width, height=height)
 
             rate = ImageVisualization.printMatchRate(src_canny, aver_canny)
 
-            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=100, height=100),
-                                            'Adaptive-average: ', aver, 'Original + canny: ',src_canny, "Average + canny", aver_canny)
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=width, height=height),
+                                            'Adaptive-average: ', res, 'Original + canny: ',src_canny, "Average + canny", aver_canny)
 
         elif(method == Threshold.GAUSSIAN):
-            aver, gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, width=width, height=height)
+            gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True,
+                                                            width=width, height=height, method=Threshold.GAUSSIAN)
 
-            gaus_canny = ImageEdgeDetection.CannyOperator(gaus, t1/2, t1, bi=False, clahe=False)
-            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, color=True)
+            gaus_canny = ImageEdgeDetection.CannyOperator(gaus, t1/2, t1, bi=False, clahe=False, width=width, height=height)
+            src_canny = ImageEdgeDetection.CannyOperator(_src, t1/2, t1, width=width, height=height)
 
             rate = ImageVisualization.printMatchRate(src_canny, gaus_canny)
 
-            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=100, height=100),
+            ImageVisualization.print4Srcs('Original: ',ImagePreprocessing.modifyImageSize(_src, width=width, height=height),
                                             'Adaptive-gaussian: ', gaus, 'Original + canny: ',src_canny, "Gaussian + canny", gaus_canny)
 
     
@@ -404,7 +431,8 @@ class ImageTest:
             t1, otsu = ImageSegmentation.otsuMethod(_src, clahe= True, width = 100, height = 100)
             b_aver, w_aver = ImageVisualization.printAverage(_src, otsu)
         elif(method==Threshold.AVERAGE):
-            aver, gaus = ImageSegmentation.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
+            aver= ImageSegmentation.adaptiveThreshold(src, dist = 5, sigma=100, closing=True,
+                                                    width=width, height=height, method=Threshold.AVERAGE)
             b_aver, w_aver = ImageVisualization.printAverage(_src, otsu)
 
         
@@ -440,7 +468,7 @@ def ImageProcessor(src, width, height):
 
 if __name__ == '__main__':
     # 원하는 이미지의 경로 - 파일명 입력
-    src = cv2.imread("ImageProcessor/image/contrast.png", cv2.IMREAD_COLOR)
+    src = cv2.imread("image/pic2.jpg", cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
         sys.exit()
@@ -448,14 +476,14 @@ if __name__ == '__main__':
     # Geay Scale
     gray = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
     
-    ImageTest.imageSegPreview(gray)
+    # ImageTest.imageSegPreview(gray, 16, 16)
     
     
     
     
     # t1, otsu = ImageSegmentation.otsuMethod(src, clahe= True, width = 100, height = 100)
 
-    # ImageTest.edgeTest(src, 100, 100, Threshold.OTSU)
+    ImageTest.edgeTest(gray, 100, 100, Threshold.GAUSSIAN)
 
     # aver, gaus = ImageSegmentation.adaptiveThreshold(gray, blk_size=7, C=4, dist = 5, sigma=100, closing=True, width = 100, height = 100)
     # aver2, gaus2 = ImageSegmentation.adaptiveThreshold(src,blk_size=7, C=-4, dist = 5, sigma=100, closing=False, width = 100, height = 100)
@@ -464,10 +492,9 @@ if __name__ == '__main__':
     # p = ImageVisualization.printPercentage(gaus)
 
 
-    ImageVisualization.print3Srcs('image: ',src, 'Otsu: ', aver, 'Gaussian: ', gaus, Hist_num=True)
+    # ImageVisualization.print3Srcs('image: ',src, 'Otsu: ', aver, 'Gaussian: ', gaus, Hist_num=True)
     
     # ImageVisualization.print3Srcs('image: ',src, 'Otsu: ', otsu, 'Gaussian: ', otsu, Hist_num=True)
-
 
 
     cv2.waitKey()
