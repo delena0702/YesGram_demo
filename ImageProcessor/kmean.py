@@ -238,9 +238,13 @@ class ImageSegmentation:
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
         
         h, w = _src.shape
-        if(h < height and w < width):
-            upsc = ImagePreprocessing.modifyImageSize(_src, width, height, cv2.INTER_CUBIC)
+        if((h < height and w < width) or (h <= 100 and w <= 100)):
+            # upsc = ImagePreprocessing.modifyImageSize(_src, width, height, cv2.INTER_CUBIC)
             t, res = cv2.threshold(_src, -1, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            
+            res = ImagePreprocessing.modifyImageSize(res, width, height, cv2.INTER_CUBIC)
+            
+            t, res = cv2.threshold(res, -1, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
             
             return t, res
         else:
@@ -265,14 +269,22 @@ class ImageSegmentation:
     def adaptiveThreshold(_src, blk_size = 7, C = 4, dist = 3, sigma = 10, closing = True, width = 100, height = 100, method=Threshold.AVERAGE):
         h, w = _src.shape
         
-        # Up Scaling
-        if(h < height and w < width):
-            upsc = ImagePreprocessing.modifyImageSize(_src, width, height, cv2.INTER_CUBIC)
-            res = cv2.adaptiveThreshold(upsc, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
+        # Up scaling
+        if(h <= height and w <= width):
+            # upsc = ImagePreprocessing.modifyImageSize(_src, width, height, cv2.INTER_CUBIC)
             
+            if(method==Threshold.AVERAGE):
+                res = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
+                
+            elif(method==Threshold.GAUSSIAN):
+                res = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
+
+            # Up scaling
+            res = ImagePreprocessing.modifyImageSize(res, width, height, cv2.INTER_CUBIC)
+            t, res = ImageSegmentation.otsuMethod(res, width=width, height=height)
             return res
         
-        # Down Scaling(?)
+        # Down scaling
         else:
             if(closing):
                 if(h>= 1000 and w >= 1000):
@@ -362,8 +374,8 @@ class ImageTest:
         total += end - start
         print(f"Average: {(end - start)*1000:.1f} ms")
         
-        dst = aver.astype(float) / 255
-        print(dst)
+        # dst = aver.astype(float) / 255
+        # print(dst)
         
         start = time.time()
         gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True, 
@@ -405,14 +417,6 @@ class ImageTest:
         elif(method == Threshold.GAUSSIAN):
             gaus = ImageSegmentation.adaptiveThreshold(_src, dist = 5, sigma=100, closing=True,
                                                             width=width, height=height, method=Threshold.GAUSSIAN)
-            
-            # m_big = np.float32([[2, 0, 0],
-            #                     [0, 2, 0]]) 
-            
-            # gaus =  cv2.warpAffine(gaus, m_big, (int(height*2), int(width*2)), None, cv2.INTER_CUBIC)
-            # gaus = ImagePreprocessing.modifyImageSize(_src, 73, 73, cv2.INTER_CUBIC)
-            # gaus = cv2.pyrUp(gaus, dstsize=(width*2, height*2), borderType=cv2.BORDER_DEFAULT)
-            # t1, gaus = ImageSegmentation.otsuMethod(gaus,clahe=False, width=96, height=96)
 
             
             gaus_canny = ImageEdgeDetection.CannyOperator(gaus, t1/2, t1, bi=False, clahe=False, width=width, height=height)
@@ -481,7 +485,7 @@ if __name__ == '__main__':
     
     # t1, otsu = ImageSegmentation.otsuMethod(src, clahe= True, width = 100, height = 100)
 
-    ImageTest.edgeTest(gray, 100, 100, Threshold.OTSU)
+    ImageTest.imageSegPreview(gray, 64, 64)
 
     # aver, gaus = ImageSegmentation.adaptiveThreshold(gray, blk_size=7, C=4, dist = 5, sigma=100, closing=True, width = 100, height = 100)
     # aver2, gaus2 = ImageSegmentation.adaptiveThreshold(src,blk_size=7, C=-4, dist = 5, sigma=100, closing=False, width = 100, height = 100)
