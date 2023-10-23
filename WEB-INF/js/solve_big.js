@@ -4,8 +4,12 @@ var config = {
 }
 
 function init() {
-    img_board = new BoardContext('img-board', Board.testtest(), ConfigValue.MODE_BIG_SOLVE, {
-        'solve_data': LocalStorageManager.testtest()
+    const pid = 0 | Utility.get_parameter('pid');
+    const board = LocalStorageManager.get_board(pid);
+    const solved_data = LocalStorageManager.get_solve_data(pid);
+
+    board_context = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SOLVE, {
+        'solve_data': solved_data
     });
 }
 

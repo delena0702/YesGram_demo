@@ -4,30 +4,27 @@ import numpy as np
 import matplotlib.pylab as plt
 import json
 
-# 허용되는 파일 확장
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
 class ImagePreprocessing:
     def __init__(self, src) -> None:
         self.src = src
 
     # 이미지를 size로 축소하는 함수
-    def reduceImageSize(_src, size = 100, gray= False):
-        
-        # 이미지 크기
-        if(gray):
-            h, w = _src.shape
-        else:
-            h, w, c = _src.shape
+    def modifyImageSize(_src, width = 100, height = 100):
+        _src = cv2.resize(_src, (width, height))
+        return _src
+    
+        # # 이미지 크기
+        # if(gray):
+        #     h, w = _src.shape
+        # else:
+        #     h, w, c = _src.shape
 
         # 이미지 비율로 자르기
-        if(h > w):
-            _src = cv2.resize(_src, ((int)(size * w / h), size))
-        else:
-            _src = cv2.resize(_src, (size, (int)(size * h / w)))
+        # if(h > w):
+        #     _src = cv2.resize(_src, ((int)(size * w / h), size))
+        # else:
+        #     _src = cv2.resize(_src, (size, (int)(size * h / w)))
         
-
-        return _src, h, w
     
     # # 이미지를 원래 크기로 복원하는 함수
     # def increaseImageSize(src, h, w):
@@ -90,8 +87,8 @@ class ImageVisualization:
     
     # 2개의 이미지와 히스토그램 출력 함수
     def print2ImageNHist(_src1, name1, _src2, name2):
-        _src1, h, w = ImagePreprocessing.reduceImageSize(_src1)
-        _src2, h, w = ImagePreprocessing.reduceImageSize(_src2)
+        _src1, h, w = ImagePreprocessing.modifyImageSize(_src1)
+        _src2, h, w = ImagePreprocessing.modifyImageSize(_src2)
 
         res = {name1 : _src1, name2 : _src2}
         for i , (key, value) in enumerate(res.items()):
@@ -109,8 +106,8 @@ class ImageVisualization:
         plt.show()
     
     # 3개의 이미지와 1번 이미지의 히스토그램 출력 함수
-    def print3Srcs(name1, _src1, name2, _src2, name3, _src3, size = 100, Hist_num = True, otsu_t = 0):
-        _src1, h, w = ImagePreprocessing.reduceImageSize(_src1)
+    def print3Srcs(name1, _src1, name2, _src2, name3, _src3, width = 100, height = 100, Hist_num = True, otsu_t = 0):
+        _src1 = ImagePreprocessing.modifyImageSize(_src1, width, height)
         _src1 = cv2.cvtColor(_src1, cv2.COLOR_RGB2GRAY)
 
         res = {name1 : _src1, name2 : _src2, name3: _src3}
@@ -155,17 +152,16 @@ class ImagePostprocessing:
 class ImageThresholding:
     def __init__(self, src) -> None:
         self.src = src
-        self.imagePrep = ImagePreprocessing(src)
 
     # K-Means Clustering
-    def KMeansClustering(_src, median = False, gaussian = False, ksize = 3, sigma = 1, closing = False, size = 125):
+    def KMeansClustering(_src, median = False, gaussian = False, ksize = 3, sigma = 1, closing = False, width= 100, height=100):
         # Median Blur
         if(median):
             src = cv2.medianBlur(_src, ksize=3)
         elif(gaussian):
             src = cv2.GaussianBlur(_src, (ksize, ksize), sigma)
 
-        _src = ImageThresholding.imagePrep.reduceImageSize(_src, size)
+        _src = ImageThresholding.modifyImageSize(_src, width, height)
 
         _src = cv2.cvtColor(_src, cv2.COLOR_GRAY2BGR)
 
@@ -199,12 +195,13 @@ class ImageThresholding:
 
     # Ostu's Method
     def OstuMethod(_src, dist = 5, sigma = 100, clahe = False, size = 100):
+    def OstuMethod(_src, dist = 5, sigma = 100, clahe = False, width = 100, height = 100):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
             
         if(clahe):
             _src = ImagePreprocessing.CLAHE(_src)
 
-        _src, h, w = ImagePreprocessing.reduceImageSize(_src, size)
+        _src= ImagePreprocessing.modifyImageSize(_src, width, height)
         _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
         t, res = cv2.threshold(_src, -1, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
@@ -214,20 +211,32 @@ class ImageThresholding:
 
     # blk_size: 이미지를 몇등분 하는가? (n x n)
     # C: threshold 값에서 가감할 상수
-    def adaptiveThreshold(_src, blk_size = 7, C = 4, dist = 3, sigma = 10, closing = False, size = 100):
+    def adaptiveThreshold(_src, blk_size = 7, C = 4, dist = 3, sigma = 10, closing = False, width = 100, height = 100):
         h, w, c = _src.shape
 
         if(closing):
             if(h >= 1000 or w >= 1000):
-                _src, h, w = ImagePreprocessing.reduceImageSize(_src, 500)
-                rat = 5
+                _src= ImagePreprocessing.modifyImageSize(_src, width*5, height*5)
+                h_rat = 5
+                w_rat = 5
             else:
-                rat = h if h >= w else w
-                rat = rat * 1.2
-                _src, h, w = ImagePreprocessing.reduceImageSize(_src, (int)(rat))
-                rat = (int)(rat / 100)
-                if(rat % 2 == 0):
-                    rat = rat - 1
+                # 중간값으로 설정
+                h_mid = (h + height) / 2
+                w_mid = (w + width) / 2
+                
+                _src, h, w = ImagePreprocessing.modifyImageSize(_src, w_mid, h_mid)
+                
+                h_rat = (int)(h_mid / hieght)
+                if(h_rat % 2 == 0):
+                    h_rat -= 1
+                
+                w_rat = (int)(w_mid / width)
+                if(w_rat % 2 == 0):
+                    w_rat -= 1
+                    
+                # rat = (int)(rat / 100)
+                # if(rat % 2 == 0):
+                #     rat = rat - 1
                     
             # bilateral filter
             _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
@@ -235,21 +244,21 @@ class ImageThresholding:
             _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
             kernel = np.ones((3, 3), np.uint8)
-            thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size * (int)(rat), C)
-            thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size * (int)(rat), C)
+            thr_aver = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
+            thr_gaus = cv2.adaptiveThreshold(_src, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size * (int)(w_rat), C)
 
             thr_aver = cv2.erode(thr_aver, kernel, iterations=1)
             thr_aver = cv2.dilate(thr_aver, kernel, iterations=1)
 
-            thr_aver, h, w = ImagePreprocessing.reduceImageSize(thr_aver, size, gray=True)
-            thr_gaus, h, w = ImagePreprocessing.reduceImageSize(thr_gaus, size, gray= True)
+            thr_aver= ImagePreprocessing.modifyImageSize(thr_aver, width, height)
+            thr_gaus= ImagePreprocessing.modifyImageSize(thr_gaus, width, height)
 
             thr_aver = cv2.adaptiveThreshold(thr_aver, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blk_size, C)
             thr_gaus = cv2.adaptiveThreshold(thr_gaus, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, blk_size, C)
 
 
         else:
-            _src, h, w = ImagePreprocessing.reduceImageSize(_src, size)
+            _src = ImagePreprocessing.modifyImageSize(_src, width, height)
             _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
 
             _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
@@ -261,12 +270,12 @@ class ImageThresholding:
         return thr_aver, thr_gaus
 
 class ImageEdgeDetection:
-    def CannyOperator(_src, size, low = 0, high = 255, dist = 5, sigma = 100, clahe = False):
+    def CannyOperator(_src, low = 0, high = 255, dist = 5, sigma = 100, clahe = False, width=100, height=100):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
         if(clahe):
              _src = ImagePreprocessing.CLAHE(_src)
 
-        _src, h, w = ImagePreprocessing.reduceImageSize(_src, size)
+        _src= ImagePreprocessing.modifyImageSize(_src, width, height)
         _src = cv2.cvtColor(_src, cv2.COLOR_RGB2GRAY)
 
         canny = cv2.Canny(_src, low, high)
@@ -276,13 +285,12 @@ class ImageEdgeDetection:
 
         return mask
 
-# 인자 적어뒀던 거 같은데 어디갔지?
-def ImageProcessor(src, size):
+def ImageProcessor(src, width, height):
     #서버에서 적절한 파일명을 가진 src가 전달되었다고 가정,
-    t1, otsu = ImageThresholding.OstuMethod(src, clahe= True, size = 100)
-    aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, size=100)
+    t1, otsu = ImageThresholding.OstuMethod(src, clahe=True, width=width, height=height)
+    aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)
     
-    # 후처리
+    # 255 -> 1
     otsu = ImageOutputProcessor.imageOutput(otsu, None)
     aver = ImageOutputProcessor.imageOutput(aver, None)
     gaus = ImageOutputProcessor.imageOutput(gaus, None)
@@ -308,10 +316,10 @@ if __name__ == '__main__':
     # print(type(json_res))
 
     #원하는 방법 실행
-    t1, res1 = ImageThresholding.OstuMethod(src, clahe= True, size = 100)
+    t1, res1 = ImageThresholding.OstuMethod(src, clahe= True, width = 100, height = 100)
 
-    aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, size=100)
-    aver2, gaus2 = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=False, size=100)
+    aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width = 100, height = 100)
+    aver2, gaus2 = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=False, width = 100, height = 100)
 
 
     p2 = ImageVisualization.printPercentage(aver)
