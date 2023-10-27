@@ -1,8 +1,8 @@
-// Default Config Values
 const storage_key_board_list = 'YESGRAM_DATA_BOARD_LIST';
 const storage_key_board = 'YESGRAM_DATA_BOARD';
 const storage_key_solve_data = 'YESGRAM_DATA_SOLVE';
 
+// Default Config Values
 var config = {
     'board_max_height_ratio': 1.5,
     'board_context_padding_ratio': 0.1,
@@ -560,6 +560,11 @@ class LocalStorageManager {
         return `${storage_key_solve_data}-${puzzle_id}`;
     }
 
+    static get_puzzle_list() {
+        const list = JSON.parse(localStorage.getItem(storage_key_board_list) ?? '[]');
+        return list;
+    }
+
     static get_empty_puzzle_id() {
         const list = JSON.parse(localStorage.getItem(storage_key_board_list) ?? '[]');
         for (let i = 1; i <= 1000; i++) {
@@ -587,7 +592,7 @@ class LocalStorageManager {
         const list = new Set(JSON.parse(localStorage.getItem(storage_key_board_list) ?? '[]'));
 
         const pre_puzzle = localStorage.getItem(key);
-        const puzzle = board.export();
+        const puzzle = board?.export();
 
         if (pre_puzzle == puzzle)
             return;
