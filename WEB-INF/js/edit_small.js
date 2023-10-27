@@ -3,7 +3,12 @@ var board_context = null;
 function init() {
     const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
-    board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT);
+    const small_x = 0 | LocalStorageManager.get_board(x);
+    const small_y = 0 | LocalStorageManager.get_board(y);
+    board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT, {
+        small_x : small_x,
+        small_y : small_y,
+    });
 
     document.getElementById('button-undo').addEventListener('click', undo);
     document.getElementById('button-reset').addEventListener('click', reset);

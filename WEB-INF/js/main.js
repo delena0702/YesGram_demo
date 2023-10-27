@@ -118,17 +118,290 @@ class Board {
     }
 }
 
+class Solver {
+    board
+
+    constructor(width, height) {
+        this.board = new PuzzleBoard(width, height)
+    }
+
+    attach_hint(hint) {
+        const { board } = this
+        board.attach_hint(hint)
+    }
+
+    async solve() {
+        const { board } = this
+        await board.solve()
+    }
+
+    get_result() {
+        const { board } = this
+        return JSON.parse(JSON.stringify(board.board))
+    }
+
+    static make_hint_from_array(arr) {
+        const [WIDTH, HEIGHT] = [arr[0].length, arr.length]
+
+        const retval = [[], []]
+
+        for (let i = 0; i < HEIGHT; i++) {
+            const params = []
+
+            let cnt = 0
+            for (let j = 0; j <= WIDTH; j++) {
+                if (j == WIDTH || arr[i][j] != 1) {
+                    if (!cnt)
+                        continue
+
+                    params.push(cnt)
+                    cnt = 0
+                }
+                else
+                    cnt++
+            }
+
+            retval[0].push(params)
+        }
+
+        for (let j = 0; j < WIDTH; j++) {
+            const params = []
+
+            let cnt = 0
+            for (let i = 0; i <= HEIGHT; i++) {
+                if (i == HEIGHT || arr[i][j] != 1) {
+                    if (!cnt)
+                        continue
+
+                    params.push(cnt)
+                    cnt = 0
+                }
+                else
+                    cnt++
+            }
+
+            retval[1].push(params)
+        }
+
+        return retval
+    }
+}
+
+class PuzzleBoard {
+    width
+    height
+    board
+    hint
+    change_listener
+
+    constructor(width, height) {
+        this.width = width
+        this.height = height
+        this.board = Array.from({ length: this.height }, () =>
+            Array.from({ length: this.width }, () => 0)
+        )
+
+        this.hint = [
+            Array.from({ length: height }, () => []),
+            Array.from({ length: width }, () => []),
+        ]
+
+        this.change_listener = (_) => { };
+    }
+
+    attach_hint(hint) {
+        this.hint = hint
+    }
+
+    solve_line(hint, board) {
+        const { max } = Math;
+        const N = board.length;
+        const M = hint.length;
+
+        const result = Array.from({ length: 2 }, () =>
+            new Array(N).fill(0)
+        );
+
+        const psum = Array.from({ length: 2 }, () =>
+            new Array(N + 1).fill(0)
+        );
+
+        for (let i = 0; i < N; i++)
+            psum[1][i + 1] = psum[1][i] + (board[i] == 1 ? 1 : 0);
+        for (let i = 0; i < N; i++)
+            psum[0][i + 1] = psum[0][i] + (board[i] == 2 ? 1 : 0);
+
+        const idxs = Array.from({ length: M + 1 }, () => [0, 0]);
+
+        idxs[0][0] = 0;
+        for (let i = 1; i <= M; i++)
+            idxs[i][0] = idxs[i - 1][0] + hint[i - 1] + 1;
+
+        idxs[M][1] = N + 1;
+        for (let i = M - 1; i >= 0; i--)
+            idxs[i][1] = idxs[i + 1][1] - hint[i] - 1;
+
+        const margin = (M ? idxs[0][1] : N);
+        if (margin < 0)
+            return new Array(N).fill(-1);
+
+        const dp = Array.from({ length: M + 1 }, () =>
+            new Array(margin + 1).fill(-1)
+        );
+
+        function solve_line_dfs(idx, start) {
+            if (dp[idx][start - idxs[idx][0]] != -1)
+                return dp[idx][start - idxs[idx][0]];
+
+            if (idx == M) {
+                if (start <= N && (psum[1][N] - psum[1][start]))
+                    return dp[idx][start - idxs[idx][0]] = false;
+                if (start < N)
+                    result[0][start]++;
+                return dp[idx][start - idxs[idx][0]] = true;
+            }
+
+            const h = hint[idx];
+            let retval = false;
+
+            for (let i = max(idxs[idx][0], start); i <= idxs[idx][1]; i++) {
+                if (psum[1][i] - psum[1][start])
+                    continue;
+                if (psum[0][i + h] - psum[0][i])
+                    continue;
+                if (i + h + 1 <= N && psum[1][i + h + 1] - psum[1][i + h])
+                    continue;
+
+                if (!solve_line_dfs(idx + 1, i + h + 1))
+                    continue;
+
+                result[0][start]++;
+                result[0][i]--;
+
+                result[1][i]++;
+                if (i + h < N)
+                    result[1][i + h]--;
+
+                if (i + h < N)
+                    result[0][i + h]++;
+                if (i + h + 1 < N)
+                    result[0][i + h + 1]--;
+                retval = true;
+            }
+
+            return dp[idx][start - idxs[idx][0]] = retval;
+        }
+
+        solve_line_dfs(0, 0);
+
+        for (let i = 0; i < 2; i++)
+            for (let j = 1; j < N; j++)
+                result[i][j] += result[i][j - 1];
+
+        const mapping = [-1, 1, 2, 0];
+        const retval = new Array(N).fill(0);
+
+        for (let i = 0; i < N; i++) {
+            if (result[0][i])
+                retval[i] += 2;
+            if (result[1][i])
+                retval[i] += 1;
+
+            retval[i] = mapping[retval[i]];
+        }
+
+        return retval;
+    }
+
+    async solve() {
+        const { width: M, height: N, board, hint, change_listener: change } = this;
+
+        this.clear_board();
+
+        const queue = Array.from({ length: N + M }, (_, i) => i);
+        const in_queue = new Array(N + M).fill(true);
+        while (queue.length) {
+            const idx = queue.shift()
+            in_queue[idx] = false;
+
+            if (idx < N) {
+                const i = idx;
+                const arr = Array.from({ length: M }, (_, j) => board[i][j]);
+                const result = this.solve_line(hint[0][i], arr);
+
+                await change([idx, queue]);
+
+                for (let j = 0; j < M; j++) {
+                    if (result[j] == -1) {
+                        board[i][j] = -1;
+                        throw Error('해결 불가능한 노노그램 퍼즐입니다.');
+                    }
+                    if (board[i][j] == result[j])
+                        continue;
+
+                    board[i][j] = result[j];
+                    await change([idx, queue]);
+
+                    if (!in_queue[N + j]) {
+                        queue.push(N + j);
+                        in_queue[N + j] = true;
+                    }
+                }
+            }
+
+            else {
+                const j = idx - N;
+                const arr = Array.from({ length: N }, (_, i) => board[i][j]);
+                const result = this.solve_line(hint[1][j], arr);
+
+                for (let i = 0; i < N; i++) {
+                    if (result[i] == -1) {
+                        board[i][j] = -1;
+                        throw Error('해결 불가능한 노노그램 퍼즐입니다.');
+                    }
+                    if (board[i][j] == result[i])
+                        continue;
+
+                    board[i][j] = result[i];
+                    await change([idx, queue]);
+
+                    if (!in_queue[i]) {
+                        queue.push(i);
+                        in_queue[i] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    clear_board() {
+        const { board, width, height } = this
+
+        for (let i = 0; i < height; i++)
+            for (let j = 0; j < width; j++)
+                board[i][j] = 0
+    }
+}
+
 class BoardContext {
     element
     context
     board
+    solve_data
+
     small_x
     small_y
     mode
-    solve_data
+
     change_stack
 
-    static CANVAS_SIZE = 500
+    hint
+    input_data
+
+    mw
+    mh
+
+    static CANVAS_SIZE = 1000
 
     constructor(id, board, mode, param) {
         this.element = document.getElementById(id);
@@ -139,6 +412,28 @@ class BoardContext {
 
         if (param)
             Object.assign(this, param);
+
+        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
+            const { small_x, small_y } = this;
+            const { small_width: width, small_height: height } = board;
+
+            const puzzle_board = Array.from({ length: height }, (_, i) =>
+                Array.from({ length: width }, (_, j) =>
+                    board.data[small_y * height + i][small_x * width + j]
+                )
+            );
+
+            this.hint = Solver.make_hint_from_array(puzzle_board);
+
+            this.input_data = Array.from({ length: height }, () =>
+                Array.from({ length: width }, () =>
+                    0
+                )
+            );
+
+            this.mw = Math.max(...this.hint[0].map(x => x.length), 1);
+            this.mh = Math.max(...this.hint[1].map(x => x.length), 1);
+        }
 
         this.init();
     }
@@ -188,8 +483,11 @@ class BoardContext {
         this.context = element.getContext('2d');
 
         object.element.addEventListener('click', (e) => {
-            this.click(e.offsetX, e.offsetY);
+            this.click(e.offsetX, e.offsetY, 1);
         });
+        object.element.oncontextmenu = (e) => {
+            return this.click(e.offsetX, e.offsetY, 2);
+        };
     }
 
     fit_ratio(width, height) {
@@ -250,7 +548,7 @@ class BoardContext {
 
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
-                this.fillTile(
+                this.fill_tile(
                     0 | (j) * gap,
                     0 | (i) * gap,
                     0 | gap + 1,
@@ -280,10 +578,7 @@ class BoardContext {
     }
 
     display_small_show() {
-        const { element, context: ctx, board } = this;
-        const x = 0 | Utility.get_parameter('x');
-        const y = 0 | Utility.get_parameter('y');
-
+        const { element, context: ctx, board, small_x: x, small_y: y } = this;
         const { large_width, large_height, small_width, small_height } = board;
 
         ctx.save();
@@ -297,7 +592,7 @@ class BoardContext {
 
         for (let i = 0; i < small_height; i++) {
             for (let j = 0; j < small_width; j++) {
-                this.fillTile(
+                this.fill_tile(
                     0 | (j) * gap,
                     0 | (i) * gap,
                     0 | gap,
@@ -392,34 +687,93 @@ class BoardContext {
     }
 
     display_small_solve() {
-        // TODO
+        const { context: ctx, board, small_x: x, small_y: y, mw, mh, hint, input_data } = this;
+        const { small_width, small_height } = board;
+
+        ctx.save();
+        ctx.fillStyle = "#aaaaaa";
+        ctx.strokeStyle = "#333333";
+        ctx.lineWidth = 1;
+
+        const width = small_width + mw;
+        const height = small_height + mh;
+        const gap = this.fit_ratio(width, height);
+
+        for (let i = 0; i < small_height; i++) {
+            for (let j = 0; j < small_width; j++) {
+                this.fill_tile(
+                    0 | (mw + j) * gap,
+                    0 | (mh + i) * gap,
+                    0 | gap,
+                    0 | gap,
+                    input_data[i][j]
+                );
+            }
+        }
+
+        ctx.fillStyle = "#000000";
+        ctx.font = `${0 | gap / 2}px consolas`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        for (let i = 0; i < hint[0].length; i++) {
+            const l = hint[0][i].length;
+
+            for (let j = 0; j < l; j++) {
+                ctx.fillText(
+                    hint[0][i][j],
+                    0 | (mw - l + j + 0.5) * gap,
+                    0 | (mh + i + 0.5) * gap
+                );
+            }
+        }
+
+        for (let i = 0; i < hint[1].length; i++) {
+            const l = hint[1][i].length;
+
+            for (let j = 0; j < l; j++) {
+                ctx.fillText(
+                    hint[1][i][j],
+                    0 | (mw + i + 0.5) * gap,
+                    0 | (mh - l + j + 0.5) * gap
+                );
+            }
+        }
+
+        ctx.lineWidth = 2;
+
+        for (let i = mh; i <= height; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0 | (0) * gap, 0 | (i) * gap);
+            ctx.lineTo(0 | (width) * gap, 0 | (i) * gap);
+            ctx.stroke();
+        }
+
+        for (let j = mw; j <= width; j++) {
+            ctx.beginPath();
+            ctx.moveTo(0 | (j) * gap, 0 | (0) * gap);
+            ctx.lineTo(0 | (j) * gap, 0 | (height) * gap);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
 
-    click(x, y) {
+    click(x, y, t) {
         const { mode } = this;
         switch (mode) {
-            // case ConfigValue.MODE_BIG_SHOW:
-            //     this.display_big_show();
-            //     break;
-            // case ConfigValue.MODE_SMALL_SHOW:
-            //     this.display_small_show();
-            //     break;
             case ConfigValue.MODE_BIG_EDIT:
-                this.click_big_edit(x, y);
-                break;
+                return this.click_big_edit(x, y, t);
             case ConfigValue.MODE_SMALL_EDIT:
-                this.click_small_edit(x, y);
-                break;
+                return this.click_small_edit(x, y, t);
             case ConfigValue.MODE_BIG_SOLVE:
-                this.click_big_solve(x, y);
-                break;
+                return this.click_big_solve(x, y, t);
             case ConfigValue.MODE_SMALL_SOLVE:
-                this.click_small_solve();
-                break;
+                return this.click_small_solve(x, y, t);
         }
     }
 
-    click_big_edit(x, y) {
+    click_big_edit(x, y, t) {
         const { element, board } = this;
         const { width: c_width, height: c_height } = element;
 
@@ -442,15 +796,16 @@ class BoardContext {
         const cy = 0 | (y - offset_y) / (gap * small_height);
 
         if (!(0 <= cx && cx < large_width))
-            return;
+            return true;
         if (!(0 <= cy && cy < large_height))
-            return;
+            return true;
 
         const pid = 0 | Utility.get_parameter('pid');
         location.href = `/edit/small?pid=${pid}&x=${cx}&y=${cy}`;
+        return false;
     }
 
-    click_small_edit(x, y) {
+    click_small_edit(x, y, t) {
         const { element, board } = this;
         const { width: c_width, height: c_height } = element;
 
@@ -473,9 +828,9 @@ class BoardContext {
         const cy = 0 | (y - offset_y) / (gap);
 
         if (!(0 <= cx && cx < small_width))
-            return;
+            return true;
         if (!(0 <= cy && cy < small_height))
-            return;
+            return true;
 
         const lx = 0 | Utility.get_parameter('x');
         const ly = 0 | Utility.get_parameter('y');
@@ -484,9 +839,10 @@ class BoardContext {
 
         this.change_stack.push([lx * small_width + cx, ly * small_height + cy]);
         this.resize_element();
+        return false;
     }
 
-    click_big_solve(x, y) {
+    click_big_solve(x, y, t) {
         const { element, board } = this;
         const { width: c_width, height: c_height } = element;
 
@@ -509,19 +865,48 @@ class BoardContext {
         const cy = 0 | (y - offset_y) / (gap * small_height);
 
         if (!(0 <= cx && cx < large_width))
-            return;
+            return true;
         if (!(0 <= cy && cy < large_height))
-            return;
+            return true;
 
         const pid = 0 | Utility.get_parameter('pid');
         location.href = `/solve/small?pid=${pid}&x=${cx}&y=${cy}`;
+        return false;
     }
 
-    click_small_solve(x, y) {
+    click_small_solve(x, y, t) {
+        const { element, board, mw, mh } = this;
+        const { width: c_width, height: c_height } = element;
 
+        x = x * (0 | element.width) / element.clientWidth;
+        y = y * (0 | element.height) / element.clientHeight;
+
+        const { small_width, small_height } = board;
+        const width = mw + small_width;
+        const height = mh + small_height;
+
+        const r = config['board_context_padding_ratio'];
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        const cx = 0 | (x - offset_x) / (gap) - mw;
+        const cy = 0 | (y - offset_y) / (gap) - mh;
+
+        if (!(0 <= cx && cx < small_width))
+            return true;
+        if (!(0 <= cy && cy < small_height))
+            return true;
+        
+        this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
+        this.resize_element();
+        return false;
     }
 
-    fillTile(x, y, w, h, type) {
+    fill_tile(x, y, w, h, type) {
         const { context: ctx } = this;
 
         ctx.save();
@@ -661,5 +1046,15 @@ class Utility {
 
     static get_parameter(key) {
         return new URL(location.href).searchParams.get(key);
+    }
+
+    static async delay(ms) {
+        function _delay(resolve) {
+            setTimeout(() => {
+                resolve();
+            }, ms)
+        }
+
+        await new Promise(_delay);
     }
 }
