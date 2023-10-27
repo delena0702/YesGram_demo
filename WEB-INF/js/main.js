@@ -900,7 +900,7 @@ class BoardContext {
             return true;
         if (!(0 <= cy && cy < small_height))
             return true;
-        
+
         this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
         this.resize_element();
         return false;
