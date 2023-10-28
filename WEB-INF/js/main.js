@@ -19,6 +19,7 @@ class ConfigValue {
     static FILTER_NONE = 0
     static FILTER_CHECK = 1
     static FILTER_CURSOR = 11
+    static FILTER_CURSOR2 = 12
 
     static isBig(value) {
         if ([this.MODE_BIG_SHOW, this.MODE_BIG_EDIT, this.MODE_BIG_SOLVE].includes(value))
@@ -413,6 +414,9 @@ class BoardContext {
     mw
     mh
 
+    cx
+    cy
+
     static CANVAS_SIZE = 1000
 
     constructor(id, board, mode, param) {
@@ -421,6 +425,9 @@ class BoardContext {
         this.board = board;
         this.mode = mode;
         this.change_stack = [];
+
+        this.cx = -1;
+        this.cy = -1;
 
         if (param)
             Object.assign(this, param);
@@ -445,8 +452,8 @@ class BoardContext {
                 )
             );
 
-            this.mw = Math.max(...this.hint[0].map(x => x.length), 1);
-            this.mh = Math.max(...this.hint[1].map(x => x.length), 1);
+            this.mw = Math.max(...this.hint[0].map(x => x.length), 1) + 1;
+            this.mh = Math.max(...this.hint[1].map(x => x.length), 1) + 1;
 
             width = small_width + this.mw;
             height = small_height + this.mh;
@@ -519,6 +526,9 @@ class BoardContext {
         object.element.oncontextmenu = (e) => {
             return this.click(e.offsetX, e.offsetY, 2);
         };
+        object.element.addEventListener('mousemove', (e) => {
+            this.move_mouse(e.offsetX, e.offsetY);
+        });
     }
 
     fit_ratio(width, height) {
@@ -793,24 +803,72 @@ class BoardContext {
     }
 
     display_filter() {
-        const { element, context: ctx, filter_board } = this;
+        const { element, board, context: ctx, filter_board, cx, cy, mode, mw, mh } = this;
+        const { large_width, large_height, small_width, small_height } = board;
 
         ctx.save();
 
-        const width = filter_board.length ?? 1;
-        const height = filter_board[0]?.length ?? 1;
+        let width = 0, height = 0;
+        let dw = 1, dh = 1;
+        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
+            width = small_width + mw;
+            height = small_height + mh;
+        } else if (ConfigValue.isBig(mode)) {
+            width = large_width * small_width;
+            height = large_height * small_height;
+            dw = small_width;
+            dh = small_height;
+        } else {
+            width = small_width;
+            height = small_height;
+        }
+
         const gap = this.fit_ratio(width, height);
 
-        for (let i = 0; i < height; i++) {
-            for (let j = 0; j < width; j++) {
+        for (let i = 0; i < filter_board.length; i++) {
+            for (let j = 0; j < filter_board[i].length; j++) {
                 this.fill_filter(
-                    0 | (j) * gap,
-                    0 | (i) * gap,
-                    0 | gap,
-                    0 | gap,
+                    0 | (j) * dw * gap,
+                    0 | (i) * dh * gap,
+                    0 | dw * gap,
+                    0 | dh * gap,
                     filter_board[i][j]
                 );
             }
+        }
+
+        if (cx >= 0) {
+            this.fill_filter(
+                0 | (cx) * dw * gap,
+                0 | (cy) * dh * gap,
+                0 | dw * gap,
+                0 | dh * gap,
+                ConfigValue.FILTER_CURSOR
+            );
+
+            this.fill_filter(
+                0 | (cx) * dw * gap,
+                0 | (0) * dh * gap,
+                0 | (1) * dw * gap,
+                0 | (height) * dh * gap,
+                ConfigValue.FILTER_CURSOR2
+            );
+
+            this.fill_filter(
+                0 | (0) * dw * gap,
+                0 | (cy) * dh * gap,
+                0 | (cx) * dw * gap,
+                0 | (1) * dh * gap,
+                ConfigValue.FILTER_CURSOR2
+            );
+
+            this.fill_filter(
+                0 | (cx + 1) * dw * gap,
+                0 | (cy) * dh * gap,
+                0 | (width - cx - 1) * dw * gap,
+                0 | (1) * dh * gap,
+                ConfigValue.FILTER_CURSOR2
+            );
         }
 
         ctx.restore();
@@ -849,8 +907,8 @@ class BoardContext {
         const offset_x = r * c_width + (real_width - gap * width) / 2;
         const offset_y = r * c_height + (real_height - gap * height) / 2;
 
-        const cx = 0 | (x - offset_x) / (gap * small_width);
-        const cy = 0 | (y - offset_y) / (gap * small_height);
+        const cx = Math.floor((x - offset_x) / (gap * small_width));
+        const cy = Math.floor((y - offset_y) / (gap * small_height));
 
         if (!(0 <= cx && cx < large_width))
             return true;
@@ -881,8 +939,8 @@ class BoardContext {
         const offset_x = r * c_width + (real_width - gap * width) / 2;
         const offset_y = r * c_height + (real_height - gap * height) / 2;
 
-        const cx = 0 | (x - offset_x) / (gap);
-        const cy = 0 | (y - offset_y) / (gap);
+        const cx = Math.floor((x - offset_x) / (gap));
+        const cy = Math.floor((y - offset_y) / (gap));
 
         if (!(0 <= cx && cx < small_width))
             return true;
@@ -918,8 +976,8 @@ class BoardContext {
         const offset_x = r * c_width + (real_width - gap * width) / 2;
         const offset_y = r * c_height + (real_height - gap * height) / 2;
 
-        const cx = 0 | (x - offset_x) / (gap * small_width);
-        const cy = 0 | (y - offset_y) / (gap * small_height);
+        const cx = Math.floor((x - offset_x) / (gap * small_width));
+        const cy = Math.floor((y - offset_y) / (gap * small_height));
 
         if (!(0 <= cx && cx < large_width))
             return true;
@@ -950,8 +1008,8 @@ class BoardContext {
         const offset_x = r * c_width + (real_width - gap * width) / 2;
         const offset_y = r * c_height + (real_height - gap * height) / 2;
 
-        const cx = 0 | (x - offset_x) / (gap) - mw;
-        const cy = 0 | (y - offset_y) / (gap) - mh;
+        const cx = Math.floor((x - offset_x) / (gap) - mw);
+        const cy = Math.floor((y - offset_y) / (gap) - mh);
 
         if (!(0 <= cx && cx < small_width))
             return true;
@@ -961,6 +1019,52 @@ class BoardContext {
         this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
         this.resize_element();
         return false;
+    }
+
+    move_mouse(x, y) {
+        const { element, mode, board, mw, mh } = this;
+        const { width: c_width, height: c_height } = element;
+        const { large_width, large_height, small_width, small_height } = board;
+
+        x = x * (0 | element.width) / element.clientWidth;
+        y = y * (0 | element.height) / element.clientHeight;
+
+        let width = 0, height = 0;
+        let dw = 1, dh = 1;
+        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
+            width = small_width + mw;
+            height = small_height + mh;
+        } else if (ConfigValue.isBig(mode)) {
+            width = large_width * small_width;
+            height = large_height * small_height;
+            dw = small_width;
+            dh = small_height;
+        } else {
+            width = small_width;
+            height = small_height;
+        }
+
+        const r = config['board_context_padding_ratio'];
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        const cx = Math.floor((x - offset_x) / (gap));
+        const cy = Math.floor((y - offset_y) / (gap));
+
+        if (!(0 <= cx && cx < width))
+            return;
+        if (!(0 <= cy && cy < height))
+            return;
+
+        this.cx = 0 | cx / dw;
+        this.cy = 0 | cy / dh;
+
+        if (!ConfigValue.isBig(mode))
+            this.resize_element();
     }
 
     fill_tile(x, y, w, h, type) {
@@ -1002,7 +1106,12 @@ class BoardContext {
                 ctx.fillRect(x, y, w, h);
                 break;
             case ConfigValue.FILTER_CURSOR:
-                ctx.fillStyle = "#ffffff44";
+                ctx.strokeStyle = "#0000ff";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, w, h);
+                break;
+            case ConfigValue.FILTER_CURSOR2:
+                ctx.fillStyle = "#ffffff33";
                 ctx.fillRect(x, y, w, h);
                 break;
         }
