@@ -17,8 +17,8 @@ class ConfigValue {
     static MODE_SMALL_SOLVE = 6
 
     static FILTER_NONE = 0
-    static FILTER_CURSOR = 1
-    static FILTER_CHECK = 2
+    static FILTER_CHECK = 1
+    static FILTER_CURSOR = 11
 
     static isBig(value) {
         if ([this.MODE_BIG_SHOW, this.MODE_BIG_EDIT, this.MODE_BIG_SOLVE].includes(value))
@@ -997,12 +997,12 @@ class BoardContext {
         switch (type) {
             case ConfigValue.FILTER_NONE:
                 break;
-            case ConfigValue.FILTER_CURSOR:
-                ctx.fillStyle = "#ffffff44";
+            case ConfigValue.FILTER_CHECK:
+                ctx.fillStyle = "#ff000044";
                 ctx.fillRect(x, y, w, h);
                 break;
-            case ConfigValue.FILTER_CHECK:
-                ctx.fillStyle = "#ffff0044";
+            case ConfigValue.FILTER_CURSOR:
+                ctx.fillStyle = "#ffffff44";
                 ctx.fillRect(x, y, w, h);
                 break;
         }

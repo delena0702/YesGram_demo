@@ -53,9 +53,17 @@ async function check() {
     await solver.solve();
     const result = solver.get_result();
 
-    console.log(result);
+    for (let i=0; i<height; i++) {
+        for (let j=0; j<width; j++) {
+            if (result[i][j])
+                result[i][j] = 0;
+            else
+                result[i][j] = 1;
+        }
+    }
 
-    // TODO
+    board_context.filter_board = result;
+    board_context.resize_element();
 }
 
 function save() {
