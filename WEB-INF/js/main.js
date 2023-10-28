@@ -425,7 +425,7 @@ class BoardContext {
         if (param)
             Object.assign(this, param);
 
-        
+
         let width = 0, height = 0;
         if (mode == ConfigValue.MODE_SMALL_SOLVE) {
             const { small_x, small_y } = this;

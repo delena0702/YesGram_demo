@@ -6,8 +6,8 @@ function init() {
     const small_x = 0 | Utility.get_parameter('x');
     const small_y = 0 | Utility.get_parameter('y');
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT, {
-        small_x : small_x,
-        small_y : small_y,
+        small_x: small_x,
+        small_y: small_y,
     });
 
     document.getElementById('button-undo').addEventListener('click', undo);
@@ -42,31 +42,41 @@ async function check() {
     const { data, small_width: width, small_height: height } = board;
 
     const puzzle_board = Array.from({ length: height }, (_, i) =>
-        Array.from({ length: width }, (_, j) => 
+        Array.from({ length: width }, (_, j) =>
             data[height * y + i][width * x + j]
         )
     );
-    
+
     const solver = new Solver(width, height);
     const hint = Solver.make_hint_from_array(puzzle_board);
     solver.attach_hint(hint);
     await solver.solve();
     const result = solver.get_result();
 
-    for (let i=0; i<height; i++) {
-        for (let j=0; j<width; j++) {
+    let retval = true;
+    for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
             if (result[i][j])
                 result[i][j] = 0;
-            else
+            else {
                 result[i][j] = 1;
+                retval = false;
+            }
         }
     }
 
     board_context.filter_board = result;
     board_context.resize_element();
+
+    return retval;
 }
 
-function save() {
+async function save() {
+    if (!await check()) {
+        alert("해가 유일하지 않습니다.");
+        return;
+    }
+
     const pid = 0 | Utility.get_parameter('pid');
     LocalStorageManager.set_board(pid, board_context.board);
     alert("저장되었습니다.");
