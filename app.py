@@ -68,7 +68,7 @@ def uploadImageResult():
     # 결과 전달 테스트용
     # return render_template('upload_test.html', json_data=segmented_image)
     
-    return send_from_directory('WEB-INF/static', 'upload_test.html', )
+    return send_from_directory('WEB-INF/static', 'upload_test.html')
 
 
 # 퍼즐을 직접 생성합니다.
