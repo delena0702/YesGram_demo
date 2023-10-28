@@ -25,7 +25,7 @@ def imsgeResult():
 # 퍼즐을 직접 생성합니다.
 @app.route('/generate/manual', methods=['GET'])    
 def manual():
-    return send_from_directory('WEB-INF/static', 'generate_image1.html')
+    return send_from_directory('WEB-INF/static', 'generate_manual.html')
 
 # 퍼즐 생성 방식
 @app.route('/generate/select', methods=['GET'])    

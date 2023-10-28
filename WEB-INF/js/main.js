@@ -572,7 +572,8 @@ class BoardContext {
                 break;
         }
 
-        this.display_filter();
+        if (!ConfigValue.isBig(mode))
+            this.display_filter();
     }
 
     display_big_show() {
@@ -1063,8 +1064,7 @@ class BoardContext {
         this.cx = 0 | cx / dw;
         this.cy = 0 | cy / dh;
 
-        if (!ConfigValue.isBig(mode))
-            this.resize_element();
+        this.resize_element();
     }
 
     fill_tile(x, y, w, h, type) {
@@ -1111,7 +1111,7 @@ class BoardContext {
                 ctx.strokeRect(x, y, w, h);
                 break;
             case ConfigValue.FILTER_CURSOR2:
-                ctx.fillStyle = "#ffffff33";
+                ctx.fillStyle = "#aaaaaa33";
                 ctx.fillRect(x, y, w, h);
                 break;
         }
