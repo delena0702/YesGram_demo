@@ -15,6 +15,16 @@ class ConfigValue {
     static MODE_SMALL_EDIT = 4
     static MODE_BIG_SOLVE = 5
     static MODE_SMALL_SOLVE = 6
+
+    static FILTER_NONE = 0
+    static FILTER_CURSOR = 1
+    static FILTER_CHECK = 2
+
+    static isBig(value) {
+        if ([this.MODE_BIG_SHOW, this.MODE_BIG_EDIT, this.MODE_BIG_SOLVE].includes(value))
+            return true;
+        return false;
+    }
 }
 
 class Board {
@@ -389,6 +399,8 @@ class BoardContext {
     board
     solve_data
 
+    filter_board
+
     small_x
     small_y
     mode
@@ -413,27 +425,46 @@ class BoardContext {
         if (param)
             Object.assign(this, param);
 
+        
+        let width = 0, height = 0;
         if (mode == ConfigValue.MODE_SMALL_SOLVE) {
             const { small_x, small_y } = this;
-            const { small_width: width, small_height: height } = board;
+            const { small_width, small_height } = board;
 
-            const puzzle_board = Array.from({ length: height }, (_, i) =>
-                Array.from({ length: width }, (_, j) =>
-                    board.data[small_y * height + i][small_x * width + j]
+            const puzzle_board = Array.from({ length: small_height }, (_, i) =>
+                Array.from({ length: small_width }, (_, j) =>
+                    board.data[small_y * small_height + i][small_x * small_width + j]
                 )
             );
 
             this.hint = Solver.make_hint_from_array(puzzle_board);
 
-            this.input_data = Array.from({ length: height }, () =>
-                Array.from({ length: width }, () =>
+            this.input_data = Array.from({ length: small_height }, () =>
+                Array.from({ length: small_width }, () =>
                     0
                 )
             );
 
             this.mw = Math.max(...this.hint[0].map(x => x.length), 1);
             this.mh = Math.max(...this.hint[1].map(x => x.length), 1);
+
+            width = small_width + this.mw;
+            height = small_height + this.mh;
+        } else if (ConfigValue.isBig(mode)) {
+            const { large_width, large_height } = board;
+            width = large_width;
+            height = large_height;
+        } else {
+            const { small_width, small_height } = board;
+            width = small_width;
+            height = small_height;
         }
+
+        this.filter_board = Array.from({ length: height }, (_, i) =>
+            Array.from({ length: width }, (_, j) =>
+                ConfigValue.FILTER_NONE
+            )
+        );
 
         this.init();
     }
@@ -530,6 +561,8 @@ class BoardContext {
                 this.display_small_solve();
                 break;
         }
+
+        this.display_filter();
     }
 
     display_big_show() {
@@ -759,6 +792,30 @@ class BoardContext {
         ctx.restore();
     }
 
+    display_filter() {
+        const { element, context: ctx, filter_board } = this;
+
+        ctx.save();
+
+        const width = filter_board.length ?? 1;
+        const height = filter_board[0]?.length ?? 1;
+        const gap = this.fit_ratio(width, height);
+
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                this.fill_filter(
+                    0 | (j) * gap,
+                    0 | (i) * gap,
+                    0 | gap,
+                    0 | gap,
+                    filter_board[i][j]
+                );
+            }
+        }
+
+        ctx.restore();
+    }
+
     click(x, y, t) {
         const { mode } = this;
         switch (mode) {
@@ -930,6 +987,26 @@ class BoardContext {
             case 102:
                 break;
         }
+        ctx.restore();
+    }
+
+    fill_filter(x, y, w, h, type) {
+        const { context: ctx } = this;
+        ctx.save();
+
+        switch (type) {
+            case ConfigValue.FILTER_NONE:
+                break;
+            case ConfigValue.FILTER_CURSOR:
+                ctx.fillStyle = "#ffffff44";
+                ctx.fillRect(x, y, w, h);
+                break;
+            case ConfigValue.FILTER_CHECK:
+                ctx.fillStyle = "#ffff0044";
+                ctx.fillRect(x, y, w, h);
+                break;
+        }
+
         ctx.restore();
     }
 
