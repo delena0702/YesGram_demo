@@ -3,8 +3,8 @@ var board_context = null;
 function init() {
     const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
-    const small_x = 0 | LocalStorageManager.get_board(x);
-    const small_y = 0 | LocalStorageManager.get_board(y);
+    const small_x = 0 | Utility.get_parameter('x');
+    const small_y = 0 | Utility.get_parameter('y');
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT, {
         small_x : small_x,
         small_y : small_y,
@@ -38,7 +38,8 @@ function reset() {
 }
 
 function check() {
-    // TODO
+    // TODO RECEIVE
+    const solver = 1;
 }
 
 function save() {
