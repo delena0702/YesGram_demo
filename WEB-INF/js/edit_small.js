@@ -37,9 +37,25 @@ function reset() {
     board_context.resize_element();
 }
 
-function check() {
-    // TODO RECEIVE
-    const solver = 1;
+async function check() {
+    const { board, small_x: x, small_y: y } = board_context;
+    const { data, small_width: width, small_height: height } = board;
+
+    const puzzle_board = Array.from({ length: height }, (_, i) =>
+        Array.from({ length: width }, (_, j) => 
+            data[height * y + i][width * x + j]
+        )
+    );
+    
+    const solver = new Solver(width, height);
+    const hint = Solver.make_hint_from_array(puzzle_board);
+    solver.attach_hint(hint);
+    await solver.solve();
+    const result = solver.get_result();
+
+    console.log(result);
+
+    // TODO
 }
 
 function save() {
