@@ -29,15 +29,21 @@ function list_all() {
             location.href = "/list";
         });
 
+        node.querySelector("#list-column > div > div > div > div > div:nth-child(2) > div > input").addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            draw_board(canvas, puzzle, e.target.checked);
+        });
+
         const canvas = node.querySelector("#list-column > div > div > canvas");
-        draw_board(canvas, puzzle);
+        draw_board(canvas, puzzle, true);
 
         node.id = "";
         list_container.appendChild(node);
     }
 }
 
-function draw_board(canvas, puzzle) {
+function draw_board(canvas, puzzle, state) {
     const { min } = Math;
     const { width: c_width, height: c_height } = canvas;
     const { large_width, large_height, small_width, small_height } = puzzle;
@@ -48,6 +54,9 @@ function draw_board(canvas, puzzle) {
     ctx.save();
     ctx.fillStyle = "#dddddd";
     ctx.fillRect(0, 0, c_width, c_height);
+
+    if (state)
+        return;
 
     const gap = min(c_width / width, c_height / height);
     const offset_x = (c_width - gap * width) / 2;
