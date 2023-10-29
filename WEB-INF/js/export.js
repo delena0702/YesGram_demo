@@ -1,5 +1,5 @@
 var config = {
-    'board_max_height_ratio': 0.8,
+    'board_max_height_ratio': 0.5,
     'board_context_padding_ratio': 0.1,
 }
 
