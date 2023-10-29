@@ -1,10 +1,5 @@
 function init() {
     const button_generate = document.getElementById('button-generate');
-    const input_large_width = document.getElementById('input-large-width');
-    const input_large_height = document.getElementById('input-large-height');
-    const input_small_width = document.getElementById('input-small-width');
-    const input_small_height = document.getElementById('input-small-height');
-
     button_generate.addEventListener('click', generate_puzzle);
 }
 
