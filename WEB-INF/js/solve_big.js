@@ -9,7 +9,14 @@ function init() {
     const solved_data = LocalStorageManager.get_solve_data(pid);
 
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SOLVE, {
-        'solve_data': solved_data
+        'solve_data': solved_data,
+        'show_answer': false,
+    });
+
+    const show_answer = document.getElementById('input-show-answer');
+    show_answer.addEventListener('click', (e) => {
+        board_context.show_answer = e.target.checked;
+        board_context.resize_element();
     });
 }
 

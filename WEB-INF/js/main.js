@@ -418,6 +418,8 @@ class BoardContext {
     cx
     cy
 
+    show_answer
+
     static CANVAS_SIZE = 1000
 
     constructor(id, board, mode, param) {
@@ -594,10 +596,10 @@ class BoardContext {
         for (let i = 0; i < height; i++) {
             for (let j = 0; j < width; j++) {
                 this.fill_tile(
-                    0 | (j) * gap,
-                    0 | (i) * gap,
-                    0 | gap + 1,
-                    0 | gap + 1,
+                    (j) * gap,
+                    (i) * gap,
+                    gap + 1,
+                    gap + 1,
                     board.data[i][j] + 100
                 );
             }
@@ -607,15 +609,15 @@ class BoardContext {
 
         for (let i = 0; i <= large_height; i++) {
             ctx.beginPath();
-            ctx.moveTo(0 | (0) * width * gap, 0 | (i) * small_height * gap);
-            ctx.lineTo(0 | (1) * width * gap, 0 | (i) * small_height * gap);
+            ctx.moveTo((0) * width * gap, (i) * small_height * gap);
+            ctx.lineTo((1) * width * gap, (i) * small_height * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= large_width; j++) {
             ctx.beginPath();
-            ctx.moveTo(0 | (j) * small_width * gap, 0 | (0) * height * gap);
-            ctx.lineTo(0 | (j) * small_width * gap, 0 | (1) * height * gap);
+            ctx.moveTo((j) * small_width * gap, (0) * height * gap);
+            ctx.lineTo((j) * small_width * gap, (1) * height * gap);
             ctx.stroke();
         }
 
@@ -677,7 +679,7 @@ class BoardContext {
     display_big_solve() {
         this.display_big_show();
 
-        const { element, context: ctx, board, solve_data } = this;
+        const { element, context: ctx, board, solve_data, show_answer } = this;
 
         const { large_width, large_height, small_width, small_height } = board;
         const width = large_width * small_width;
@@ -694,23 +696,24 @@ class BoardContext {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
+        if (!show_answer) {
+            for (let i = 0; i < large_height; i++) {
+                for (let j = 0; j < large_width; j++) {
+                    if (solve_data[i][j])
+                        continue;
 
-        for (let i = 0; i < large_height; i++) {
-            for (let j = 0; j < large_width; j++) {
-                if (solve_data[i][j])
-                    continue;
+                    ctx.fillStyle = "#888888";
+                    ctx.fillRect(
+                        (j) * small_width * gap,
+                        (i) * small_height * gap,
+                        (1) * small_width * gap,
+                        (1) * small_height * gap);
 
-                ctx.fillStyle = "#888888";
-                ctx.fillRect(
-                    0 | (j) * small_width * gap,
-                    0 | (i) * small_height * gap,
-                    0 | (1) * small_width * gap,
-                    0 | (1) * small_height * gap);
-
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText("?",
-                    0 | (j + 0.5) * small_width * gap,
-                    0 | (i + 0.5) * small_height * gap);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillText("?",
+                        (j + 0.5) * small_width * gap,
+                        (i + 0.5) * small_height * gap);
+                }
             }
         }
 
@@ -718,15 +721,15 @@ class BoardContext {
 
         for (let i = 0; i <= large_height; i++) {
             ctx.beginPath();
-            ctx.moveTo(0 | (0) * width * gap, 0 | (i) * small_height * gap);
-            ctx.lineTo(0 | (1) * width * gap, 0 | (i) * small_height * gap);
+            ctx.moveTo((0) * width * gap, (i) * small_height * gap);
+            ctx.lineTo((1) * width * gap, (i) * small_height * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= large_width; j++) {
             ctx.beginPath();
-            ctx.moveTo(0 | (j) * small_width * gap, 0 | (0) * height * gap);
-            ctx.lineTo(0 | (j) * small_width * gap, 0 | (1) * height * gap);
+            ctx.moveTo((j) * small_width * gap, (0) * height * gap);
+            ctx.lineTo((j) * small_width * gap, (1) * height * gap);
             ctx.stroke();
         }
     }
