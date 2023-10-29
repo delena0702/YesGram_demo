@@ -14,7 +14,6 @@ function import_puzzle() {
     }
 
     LocalStorageManager.set_board(pid, board);
-    // TEST !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     location.href = `/edit/big?pid=${pid}`;
 }
 

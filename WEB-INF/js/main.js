@@ -363,6 +363,7 @@ class PuzzleBoard {
             else {
                 const j = idx - N;
                 const arr = Array.from({ length: N }, (_, i) => board[i][j]);
+                console.log(1, j, hint[1][j], "<<<", N, M);
                 const result = this.solve_line(hint[1][j], arr);
 
                 for (let i = 0; i < N; i++) {
