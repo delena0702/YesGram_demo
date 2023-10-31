@@ -452,12 +452,12 @@ def ImageProcessor(src, width, height):
         sys.exit()
     
     # Gray Scale
-    src = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
     
     #서버에서 적절한 파일명을 가진 src가 전달되었다고 가정,
-    t1, otsu = ImageSegmentation.otsuMethod(src, clahe=True, width=width, height=height)
-    aver = ImageSegmentation.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height, method=Threshold.AVERAGE)
-    gaus = ImageSegmentation.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height, method=Threshold.GAUSSIAN)
+    t1, otsu = ImageSegmentation.otsuMethod(gray, clahe=True, width=width, height=height)
+    aver = ImageSegmentation.adaptiveThreshold(gray, dist = 5, sigma=100, closing=True, width=width, height=height, method=Threshold.AVERAGE)
+    gaus = ImageSegmentation.adaptiveThreshold(gray, dist = 5, sigma=100, closing=True, width=width, height=height, method=Threshold.GAUSSIAN)
 
     
     # 255 -> 1

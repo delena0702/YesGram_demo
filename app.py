@@ -37,7 +37,7 @@ def uploadImage():
 
 @app.route('/generate/image/result', methods=['POST'])    
 def uploadImageResult():
-    # 파일 이름: <image>를 요청함
+    # 파일 이름: <image>를 요청함 - 변수 이름
     img = request.files['image']
     
     #이미지 파일 없음
@@ -52,23 +52,24 @@ def uploadImageResult():
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
     img.save(img_path)
     
+    
     # 변수 이름: <width, height> 값을 요청함 - 일단 들어온다고 가정하겠습니다.
-    # width = int(request.form['width'])
-    # height = int(request.form['height'])
+    width = int(request.form['width'])
+    height = int(request.form['height'])
     
     # 변수 이름: <row, column> 값을 요청함
-    # row = int(request.form['row'])
-    # column = int(request.form['column'])
+    row = int(request.form['row'])
+    column = int(request.form['column'])
     
     # 이미지 처리 결과
-    segmented_image = kmean.ImageProcessor(img_path, 100, 100)
+    segmented_image = kmean.ImageProcessor(img_path, width, height)
     
-    # 처리된 이미지 전달 어떻게?
+    # solver 모듈과 연결 필요
     
-    # 결과 전달 테스트용
-    # return render_template('upload_test.html', json_data=segmented_image)
+    # 처리된 이미지 전달
+    # return send_from_directory('WEB-INF/static', 'generate_image2.html')
     
-    return send_from_directory('WEB-INF/static', 'upload_test.html')
+    return render_template('upload_test.html', json_data=segmented_image)
 
 
 # 퍼즐을 직접 생성합니다.
@@ -121,7 +122,7 @@ def importPuzzle():
 def exportPuzzle():
     return send_from_directory('WEB-INF/static', 'export.html')
 
-# <수정> - 404 Error
+
 @app.route('/solve/big', methods=['GET'])
 def solveBig():
     pid = request.args.get('pid')
@@ -131,7 +132,7 @@ def solveBig():
     return send_from_directory('WEB-INF/static', 'solve_big.html')
 
 
-# 임시 404 Html
+
 @app.route('/solve/small', methods=['GET'])
 def sloveSmall():
     pid = request.args.get('pid')
