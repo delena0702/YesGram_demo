@@ -194,6 +194,7 @@ class ImageThresholding:
         return _src, dst
 
     # Ostu's Method
+    def OstuMethod(_src, dist = 5, sigma = 100, clahe = False, size = 100):
     def OstuMethod(_src, dist = 5, sigma = 100, clahe = False, width = 100, height = 100):
         _src = cv2.bilateralFilter(_src, dist, sigma, sigma)
             
