@@ -466,11 +466,11 @@ def ImageProcessor(src, width, height):
     gaus = ImageOutputProcessor.imageOutput(gaus, None)
     
     # json 리턴 - '방식'은 이후 바뀔 수 있음
-    json_obj = [
-        {'otsu': otsu},
-        {'aver': aver},
-        {'gaus': gaus}
-    ]
+    json_obj = {
+        'otsu': otsu, 
+        'aver': aver,
+        'gaus': gaus
+        }
 
     return json.dumps(json_obj)
 
