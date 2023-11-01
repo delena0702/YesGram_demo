@@ -285,7 +285,7 @@ class ImageEdgeDetection:
 
         return mask
 
-def ImageProcessor(src, width, height):
+def ImageProcessor(src, width, height, row, column):
     #서버에서 적절한 파일명을 가진 src가 전달되었다고 가정,
     t1, otsu = ImageThresholding.OstuMethod(src, clahe=True, width=width, height=height)
     aver, gaus = ImageThresholding.adaptiveThreshold(src, dist = 5, sigma=100, closing=True, width=width, height=height)

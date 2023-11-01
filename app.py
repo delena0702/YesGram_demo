@@ -1,13 +1,27 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, send_from_directory, render_template, jsonify
+from werkzeug.utils import secure_filename
+import os
 
-app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF')
+from ImageProcessor import kmean
+
+# 이미지 확장자 제한 - 추후 변경 가능
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+UPLOAD_FOLDER = 'WEB-INF\\image'
+
+app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF', template_folder='templates')
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+# 파일 확장자 검사
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # 메인 페이지
 @app.route('/', methods=['GET'])
 def index():
     return send_from_directory('WEB-INF/static', 'index.html')
-    # return render_template('index.html')
 
 # 퍼즐을 이미지로 생성
 @app.route('/generate/image/select', methods=['GET'])    
@@ -15,11 +29,45 @@ def generate_image1():
     return send_from_directory('WEB-INF/static', 'generate_image1.html')
 
 
-# 해당 부분 <수정>해야 함
+@app.route('/generate/image/result', methods=['GET'])    
+def uploadImage():
+    return send_from_directory('WEB-INF/static', 'upload.html')
+
+
 @app.route('/generate/image/result', methods=['POST'])    
-def imsgeResult():
-    "TODO !!!!!!!!!!!!!!!!!!!!!!!!!! 이미지 처리 필요"
-    return send_from_directory('WEB-INF/static', 'generate_image2.html')
+def uploadImageResult():
+    # 파일 이름: <image>를 요청함
+    img = request.files['image']
+    
+    #이미지 파일 없음
+    if not img:
+        return send_from_directory('WEB-INF/static', '404.html')
+    
+    # 이미지 확장자 불일치
+    if not allowed_file(img.filename):
+        return send_from_directory('WEB-INF/static', '404.html')
+
+    img_name = secure_filename(img.filename)
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
+    img.save(img_path)
+    
+    # 변수 이름: <width, height> 값을 요청함 - 일단 들어온다고 가정하겠습니다.
+    # width = int(request.form['width'])
+    # height = int(request.form['height'])
+    
+    # 변수 이름: <row, column> 값을 요청함
+    # row = int(request.form['row'])
+    # column = int(request.form['column'])
+    
+    # 이미지 처리 결과
+    segmented_image = kmean.ImageProcessor(img_path, 100, 100)
+    
+    # 처리된 이미지 전달 어떻게?
+    
+    # 결과 전달 테스트용
+    # return render_template('upload_test.html', json_data=segmented_image)
+    
+    return send_from_directory('WEB-INF/static', 'upload_test.html', )
 
 
 # 퍼즐을 직접 생성합니다.
@@ -37,33 +85,65 @@ def select():
 def list():
     return send_from_directory('WEB-INF/static', 'list.html')
 
-# 퍼즐 수정 (전체)
+# 임시 404 Html
 @app.route('/edit/big', methods=['GET'])    
 def editBig():
+    pid = request.args.get('pid')
+    if(pid is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+
     return send_from_directory('WEB-INF/static', 'edit_big.html')
 
-# 퍼즐 수정 (부분)
-# 이후 <수정>해야 함 - 404 Error
+# 임시 404 Html
 @app.route('/edit/small', methods=['GET'])    
 def editSmall():
+    pid = request.args.get('pid')
+    if(pid is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+
+    x = request.args.get('x')
+    if(x is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+    
+    y = request.args.get('y')
+    if(y is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+
     return send_from_directory('WEB-INF/static', 'edit_small.html')
 
-@app.route('/import')
+@app.route('/import', methods=['GET'])
 def importPuzzle():
     return send_from_directory('WEB-INF/static', 'import.html')
 
-@app.route('/export')
+@app.route('/export', methods=['GET'])
 def exportPuzzle():
     return send_from_directory('WEB-INF/static', 'export.html')
 
 # <수정> - 404 Error
-@app.route('/solve/big')
+@app.route('/solve/big', methods=['GET'])
 def solveBig():
+    pid = request.args.get('pid')
+    if(pid is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+    
     return send_from_directory('WEB-INF/static', 'solve_big.html')
 
-# <수정> - 404 Error
-@app.route('/solve/small')
+
+# 임시 404 Html
+@app.route('/solve/small', methods=['GET'])
 def sloveSmall():
+    pid = request.args.get('pid')
+    if(pid is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+
+    x = request.args.get('x')
+    if(x is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+    
+    y = request.args.get('y')
+    if(y is None):
+        return send_from_directory('WEB-INF/static', '404.html')
+
     return send_from_directory('WEB-INF/static', 'solve_small.html')
 
 if __name__ == "__main__":
