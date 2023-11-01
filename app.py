@@ -56,10 +56,6 @@ def uploadImageResult():
     width = int(request.form['width'])
     height = int(request.form['height'])
     
-    # 변수 이름: <row, column> 값을 요청함
-    row = int(request.form['row'])
-    column = int(request.form['column'])
-    
     # 이미지 처리 결과
     segmented_image = kmean.ImageProcessor(img_path, width, height)
     
