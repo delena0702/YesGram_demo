@@ -51,8 +51,13 @@ def uploadImageResult():
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
     img.save(img_path)
     
-    width = int(request.form['large-width']) * int(request.form['small-width'])
-    height = int(request.form['large-height']) * int(request.form['small-height'])
+    large_width = int(request.form['large-width'])
+    small_width = int(request.form['small-width'])
+    large_height = int(request.form['large-height'])
+    small_height = int(request.form['small-height'])
+    
+    width = large_width * small_width
+    height = large_height * small_height
     
     # 이미지 처리 결과
     segmented_image = kmean.ImageProcessor(img_path, width, height)
@@ -60,9 +65,13 @@ def uploadImageResult():
     # solver 모듈과 연결 필요
     
     # 처리된 이미지 전달
-    # return send_from_directory('WEB-INF/static', 'generate_image2.html')
-    
-    return render_template('upload_test.html', json_data=segmented_image)
+    return render_template('generate_image2.html',
+                           image_data=segmented_image,
+                           large_width = large_width,
+                           small_width = small_width,
+                           large_height = large_height,
+                           small_height = small_height
+                           )
 
 
 # 퍼즐을 직접 생성합니다.
