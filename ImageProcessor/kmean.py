@@ -467,9 +467,18 @@ def ImageProcessor(src, width, height):
     
     # json 리턴 - '방식'은 이후 바뀔 수 있음
     json_obj = {
-        'otsu': otsu, 
-        'aver': aver,
-        'gaus': gaus
+        'otsu': {
+            'desc': "이 방법은 개쩝니다.",
+            'data': otsu
+            }, 
+        'aver': {
+            'desc': "이 방법은 개쩝니다.",
+            'data': aver
+            }, 
+        'gaus': {
+            'desc': "이 방법은 개쩝니다.",
+            'data': gaus
+            }
         }
 
     return json.dumps(json_obj)

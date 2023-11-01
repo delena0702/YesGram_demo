@@ -28,12 +28,6 @@ def index():
 def generate_image1():
     return render_template('generate_image1.html')
 
-
-@app.route('/generate/image/result', methods=['GET'])    
-def uploadImage():
-    return render_template('upload.html')
-
-
 @app.route('/generate/image/result', methods=['POST'])    
 def uploadImageResult():
     # 파일 이름: <image>를 요청함 - 변수 이름
