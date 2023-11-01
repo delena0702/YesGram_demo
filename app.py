@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory, render_template, jsonify
+from flask import Flask, request, render_template
 from werkzeug.utils import secure_filename
 import os
 
@@ -8,7 +8,7 @@ from ImageProcessor import kmean
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_FOLDER = 'WEB-INF\\image'
 
-app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF', template_folder='templates')
+app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF/static', template_folder='WEB-INF/templates')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -21,17 +21,17 @@ def allowed_file(filename):
 # 메인 페이지
 @app.route('/', methods=['GET'])
 def index():
-    return send_from_directory('WEB-INF/static', 'index.html')
+    return render_template('index.html')
 
 # 퍼즐을 이미지로 생성
 @app.route('/generate/image/select', methods=['GET'])    
 def generate_image1():
-    return send_from_directory('WEB-INF/static', 'generate_image1.html')
+    return render_template('generate_image1.html')
 
 
 @app.route('/generate/image/result', methods=['GET'])    
 def uploadImage():
-    return send_from_directory('WEB-INF/static', 'upload.html')
+    return render_template('upload.html')
 
 
 @app.route('/generate/image/result', methods=['POST'])    
@@ -41,11 +41,11 @@ def uploadImageResult():
     
     #이미지 파일 없음
     if not img:
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
     
     # 이미지 확장자 불일치
     if not allowed_file(img.filename):
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
 
     img_name = secure_filename(img.filename)
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
@@ -70,60 +70,57 @@ def uploadImageResult():
 # 퍼즐을 직접 생성합니다.
 @app.route('/generate/manual', methods=['GET'])    
 def manual():
-    return send_from_directory('WEB-INF/static', 'generate_manual.html')
+    return render_template('generate_manual.html')
 
 # 퍼즐 생성 방식
 @app.route('/generate/select', methods=['GET'])    
 def select():
-    return send_from_directory('WEB-INF/static', 'generate_select.html')
+    return render_template('generate_select.html')
 
 # 퍼즐 목록
 @app.route('/list', methods=['GET'])    
 def list():
-    return send_from_directory('WEB-INF/static', 'list.html')
+    return render_template('list.html')
 
 # 임시 404 Html
 @app.route('/edit/big', methods=['GET'])    
 def editBig():
     pid = request.args.get('pid')
     if(pid is None):
-        return send_from_directory('WEB-INF/static', '404.html')
-
-    return send_from_directory('WEB-INF/static', 'edit_big.html')
+        return render_template('404.html')
+    return render_template('edit_big.html')
 
 # 임시 404 Html
 @app.route('/edit/small', methods=['GET'])    
 def editSmall():
     pid = request.args.get('pid')
     if(pid is None):
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
 
     x = request.args.get('x')
     if(x is None):
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
     
     y = request.args.get('y')
     if(y is None):
-        return send_from_directory('WEB-INF/static', '404.html')
-
-    return send_from_directory('WEB-INF/static', 'edit_small.html')
+        return render_template('404.html')
+    return render_template('edit_small.html')
 
 @app.route('/import', methods=['GET'])
 def importPuzzle():
-    return send_from_directory('WEB-INF/static', 'import.html')
+    return render_template('import.html')
 
 @app.route('/export', methods=['GET'])
 def exportPuzzle():
-    return send_from_directory('WEB-INF/static', 'export.html')
+    return render_template('export.html')
 
 
 @app.route('/solve/big', methods=['GET'])
 def solveBig():
     pid = request.args.get('pid')
     if(pid is None):
-        return send_from_directory('WEB-INF/static', '404.html')
-    
-    return send_from_directory('WEB-INF/static', 'solve_big.html')
+        return render_template('404.html')
+    return render_template('solve_big.html')
 
 
 
@@ -131,17 +128,16 @@ def solveBig():
 def sloveSmall():
     pid = request.args.get('pid')
     if(pid is None):
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
 
     x = request.args.get('x')
     if(x is None):
-        return send_from_directory('WEB-INF/static', '404.html')
+        return render_template('404.html')
     
     y = request.args.get('y')
     if(y is None):
-        return send_from_directory('WEB-INF/static', '404.html')
-
-    return send_from_directory('WEB-INF/static', 'solve_small.html')
+        return render_template('404.html')
+    return render_template('solve_small.html')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=80) 
