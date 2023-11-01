@@ -16,8 +16,9 @@
       }
     }
 
-    main>.container {
-      padding: 60px 15px 0;
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
     }
   </style>
 </head>
@@ -52,11 +53,12 @@
   <main>
     <section class="py-5 text-center container">
       <div class="row py-lg-5">
-        <div class="col-lg-6 col-md-8 mx-auto">
-          <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
-        </div>
-        <div>
-          <h2 class="fw-light">Step 1. 이미지 선택하기</h2>
+        <form class="col-12" target="/">
+          <div class="col-lg-6 col-md-8 mx-auto">
+            <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
+          </div>
+
+          <h2 class="fw-light mt-5">Step 1. 이미지 선택하기</h2>
           <div class="mb-3">
             <input type="file" class="form-control form-control-lg" aria-label="Large file input example"
               accept="image/*" name="file" onchange="fileCheck(this);">
@@ -70,53 +72,51 @@
               }
             </script>
           </div>
-        </div>
-        <div>
-          <h2 class="fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
-          <h4 class="fw-light">실제 퍼즐 크기</h4>
+
+          <h2 class="mt-5 text-center fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
+          <h4 class="mt-5 fw-light">실제 퍼즐 크기</h4>
           <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할 지 결정 합니다.</h5>
-          <div class="bd-example m-0 border-0">
-            <form class="row g-3">
+          <div class="mt-4 bd-example m-0 border-0">
+            <div class="row g-3">
+              <div class="col-md-2"></div>
               <div class="col-md-4">
-                <label for="validationServer01" class="form-label">가로 칸 개수</label>
-                <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
-                <div class="valid-feedback">
-                  좋습니다!
-                </div>
+                <label for="input-small-width" class="form-label">가로 칸 개수 <span class="lead fs-6">(1 ~
+                    100)</span></label>
+                <input type="number" name="small-width" class="form-control" id="input-small-width" min="1" max="100"
+                  step="1" value="10" required="">
               </div>
               <div class="col-md-4">
-                <label for="validationServer02" class="form-label">세로 칸 개수</label>
-                <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
-                <div class="invalid-feedback">
-                  n ~ n 사이 숫자를 입력해주세요
-                </div>
+                <label for="input-small-height" class="form-label">세로 칸 개수 <span class="lead fs-6">(1 ~
+                    100)</span></label>
+                <input type="number" name="small-height" class="form-control" id="input-small-height" min="1" max="100"
+                  step="1" value="10" required="">
               </div>
-            </form>
+            </div>
           </div>
-          <h4 class="fw-light">이미지 분할 크기</h4>
+          <h4 class="mt-5 fw-light">이미지 분할 크기</h4>
           <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할 지 결정합니다.</h5>
-          <div class="bd-example m-0 border-0">
-            <form class="row g-3">
+          <div class="mt-4 bd-example m-0 border-0">
+            <div class="row g-3">
+              <div class="col-md-2"></div>
               <div class="col-md-4">
-                <label for="validationServer01" class="form-label">가로 칸 개수</label>
-                <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
-                <div class="valid-feedback">
-                  좋습니다!
-                </div>
+                <label for="input-large-width" class="form-label">가로 칸 개수 <span class="lead fs-6">(1 ~
+                    10)</span></label>
+                <input type="number" name="large-width" class="form-control" id="input-large-width" min="1" max="10"
+                  step="1" value="1" required="">
               </div>
               <div class="col-md-4">
-                <label for="validationServer02" class="form-label">세로 칸 개수</label>
-                <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
-                <div class="invalid-feedback">
-                  n ~ n 사이 숫자를 입력해주세요
-                </div>
+                <label for="input-large-height" class="form-label">세로 칸 개수 <span class="lead fs-6">(1 ~
+                    10)</span></label>
+                <input type="number" name="large-height" class="form-control" id="input-large-height" min="1" max="10"
+                  step="1" value="1" required="">
               </div>
-              <div class="col-12">
-                <button class="btn btn-primary" type="submit">이미지 생성하기</button>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
+
+          <div class="mt-5 col-12 text-center">
+            <button id="button-generate" type="button" class="btn btn-primary">퍼즐 생성하기</button>
+          </div>
+        </form>
 
 
       </div>
