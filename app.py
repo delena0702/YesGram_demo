@@ -70,8 +70,7 @@ def uploadImageResult():
                            large_width = large_width,
                            small_width = small_width,
                            large_height = large_height,
-                           small_height = small_height
-                           )
+                           small_height = small_height)
 
 
 # 퍼즐을 직접 생성합니다.

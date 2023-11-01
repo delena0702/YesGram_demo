@@ -83,87 +83,16 @@
         <div class="album py-5 bg-body-tertiary">
           <div class="container">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-              <div class="col">
+              <div id="card-filter" class="col">
                 <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
+                  <canvas id="output-puzzle" class="card-img-top"></canvas>
                   <div class="card-body">
                     <h5 class="card-title">적용 필터</h5>
                     <p class="card-text">전처리 방법들에 대한 간략 내용</p>
                     <div class="d-flex justify-content-center align-items-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                        <button id="button-select" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                           선택하기
                         </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-      
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -209,6 +138,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
         crossorigin="anonymous"></script>
+    
     {% autoescape off %}
     <script>
       var image_data = {{image_data}}
