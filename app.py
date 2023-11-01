@@ -6,7 +6,7 @@ from ImageProcessor import kmean
 
 # 이미지 확장자 제한 - 추후 변경 가능
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-UPLOAD_FOLDER = 'WEB-INF\\image'
+UPLOAD_FOLDER = 'WEB-INF\\static\\image'
 
 app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF/static', template_folder='WEB-INF/templates')
 
@@ -51,10 +51,8 @@ def uploadImageResult():
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
     img.save(img_path)
     
-    
-    # 변수 이름: <width, height> 값을 요청함 - 일단 들어온다고 가정하겠습니다.
-    width = int(request.form['width'])
-    height = int(request.form['height'])
+    width = int(request.form['large-width']) * int(request.form['small-width'])
+    height = int(request.form['large-height']) * int(request.form['small-height'])
     
     # 이미지 처리 결과
     segmented_image = kmean.ImageProcessor(img_path, width, height)

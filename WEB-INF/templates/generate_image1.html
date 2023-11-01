@@ -53,7 +53,7 @@
   <main>
     <section class="py-5 text-center container">
       <div class="row py-lg-5">
-        <form class="col-12" target="/">
+        <form class="col-12" action="/generate/image/result" method="post" enctype="multipart/form-data">
           <div class="col-lg-6 col-md-8 mx-auto">
             <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
           </div>
@@ -61,7 +61,7 @@
           <h2 class="fw-light mt-5">Step 1. 이미지 선택하기</h2>
           <div class="mb-3">
             <input type="file" class="form-control form-control-lg" aria-label="Large file input example"
-              accept="image/*" name="file" onchange="fileCheck(this);">
+              accept="image/*" name="image" onchange="fileCheck(this);">
             <script type="text/javascript">
               function fileCheck(el) {
                 if (!/\.(jpeg|jpg|png|gif|bmp)$/i.test(el.value)) {
@@ -114,7 +114,7 @@
           </div>
 
           <div class="mt-5 col-12 text-center">
-            <button id="button-generate" type="button" class="btn btn-primary">퍼즐 생성하기</button>
+            <button id="button-generate" type="submit" class="btn btn-primary">퍼즐 생성하기</button>
           </div>
         </form>
 
