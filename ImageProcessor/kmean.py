@@ -467,15 +467,15 @@ def ImageProcessor(src, width, height):
     
     # json 리턴 - '방식'은 이후 바뀔 수 있음
     json_obj = {
-        'otsu': {
+        'Otsu\'s method': {
             'desc': "이 방법은 개쩝니다.",
             'data': otsu
             }, 
-        'aver': {
+        'Adaptive threshold-Arithmetic': {
             'desc': "이 방법은 개쩝니다.",
             'data': aver
             }, 
-        'gaus': {
+        'Adaptive threshold-Gaussian': {
             'desc': "이 방법은 개쩝니다.",
             'data': gaus
             }
