@@ -8,8 +8,7 @@ from ImageProcessor import kmean
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 UPLOAD_FOLDER = 'WEB-INF\\image'
 
-app = Flask(__name__, static_url_path='/WEB-INF/static', static_folder='static')
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF', template_folder='templates')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -112,10 +111,9 @@ def editSmall():
 
     return send_from_directory('WEB-INF/static', 'edit_small.html')
 
-
 @app.route('/import', methods=['GET'])
 def importPuzzle():
-    return send_from_directory('WEB-INF/static', 'index.html')
+    return send_from_directory('WEB-INF/static', 'import.html')
 
 @app.route('/export', methods=['GET'])
 def exportPuzzle():
