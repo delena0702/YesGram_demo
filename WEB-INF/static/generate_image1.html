@@ -3,23 +3,23 @@
 <html lang="ko" class="h-100" data-bs-theme="auto">
 
 <head>
-    <meta charset="utf-8">
-    <title>Nonogram Puzzle Generator</title>
+  <meta charset="utf-8">
+  <title>Nonogram Puzzle Generator</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
 
-    <style>
-        @media (min-width: 768px) {
-            .bd-placeholder-img-lg {
-                font-size: 3.5rem;
-            }
-        }
+  <style>
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
 
-        main>.container {
-            padding: 60px 15px 0;
-        }
-    </style>
+    main>.container {
+      padding: 60px 15px 0;
+    }
+  </style>
 </head>
 
 
@@ -27,135 +27,142 @@
 
   <header>
     <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">YesGram</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
-                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarCollapse">
-                <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/generate/select">Generate Puzzle</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/list">Puzzle List</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/import">Import Puzzle</a>
-                    </li>
-                </ul>
-            </div>
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">YesGram</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+          aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav me-auto mb-2 mb-md-0">
+            <li class="nav-item">
+              <a class="nav-link" href="/generate/select">Generate Puzzle</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/list">Puzzle List</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/import">Import Puzzle</a>
+            </li>
+          </ul>
         </div>
+      </div>
     </nav>
-</header>
-    <main>
+  </header>
+  <main>
     <section class="py-5 text-center container">
-        <div class="row py-lg-5">
-          <div class="col-lg-6 col-md-8 mx-auto">
-            <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
-          </div>
-          <div>
-            <h2 class="fw-light">Step 1. 이미지 선택하기</h2>
-            <div class="mb-3">
-            <input type="file" class="form-control form-control-lg" aria-label="Large file input example" accept="image/*" name="file" onchange="fileCheck(this);">
-            <script type="text/javascript"> 
-              function fileCheck(el) { 
-                  if(!/\.(jpeg|jpg|png|gif|bmp)$/i.test(el.value)){ 
-                      alert('이미지 파일만 업로드 가능합니다.'); 
-                      el.value = ''; 
-                      el.focus(); 
-                  }
+      <div class="row py-lg-5">
+        <div class="col-lg-6 col-md-8 mx-auto">
+          <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
+        </div>
+        <div>
+          <h2 class="fw-light">Step 1. 이미지 선택하기</h2>
+          <div class="mb-3">
+            <input type="file" class="form-control form-control-lg" aria-label="Large file input example"
+              accept="image/*" name="file" onchange="fileCheck(this);">
+            <script type="text/javascript">
+              function fileCheck(el) {
+                if (!/\.(jpeg|jpg|png|gif|bmp)$/i.test(el.value)) {
+                  alert('이미지 파일만 업로드 가능합니다.');
+                  el.value = '';
+                  el.focus();
+                }
               }
-              </script>
-            </div>
+            </script>
           </div>
-          <div>
-            <h2 class="fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
-            <h4 class="fw-light">실제 퍼즐 크기</h4>
-            <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할 지 결정 합니다.</h5>
-            <div class="bd-example m-0 border-0">
-                <form class="row g-3">
-                  <div class="col-md-4">
-                    <label for="validationServer01" class="form-label">가로 칸 개수</label>
-                    <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
-                    <div class="valid-feedback">
-                      좋습니다!
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <label for="validationServer02" class="form-label">세로 칸 개수</label>
-                    <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
-                    <div class="invalid-feedback">
-                      n ~ n 사이 숫자를 입력해주세요
-                    </div>
-                  </div>
-                </form>
-            </div>
-            <h4 class="fw-light">이미지 분할 크기</h4>
-            <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할 지 결정합니다.</h5>
-            <div class="bd-example m-0 border-0">
-                <form class="row g-3">
-                  <div class="col-md-4">
-                    <label for="validationServer01" class="form-label">가로 칸 개수</label>
-                    <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
-                    <div class="valid-feedback">
-                      좋습니다!
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <label for="validationServer02" class="form-label">세로 칸 개수</label>
-                    <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
-                    <div class="invalid-feedback">
-                      n ~ n 사이 숫자를 입력해주세요
-                    </div>
-                  </div>
-                  <div class="col-12">
-                    <button class="btn btn-primary" type="submit">이미지 생성하기</button>
-                  </div>
-                </form>
-            </div>
-          </div>
-          
-          
         </div>
-      </section>
-    </main>
+        <div>
+          <h2 class="fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
+          <h4 class="fw-light">실제 퍼즐 크기</h4>
+          <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할 지 결정 합니다.</h5>
+          <div class="bd-example m-0 border-0">
+            <form class="row g-3">
+              <div class="col-md-4">
+                <label for="validationServer01" class="form-label">가로 칸 개수</label>
+                <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
+                <div class="valid-feedback">
+                  좋습니다!
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="validationServer02" class="form-label">세로 칸 개수</label>
+                <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
+                <div class="invalid-feedback">
+                  n ~ n 사이 숫자를 입력해주세요
+                </div>
+              </div>
+            </form>
+          </div>
+          <h4 class="fw-light">이미지 분할 크기</h4>
+          <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할 지 결정합니다.</h5>
+          <div class="bd-example m-0 border-0">
+            <form class="row g-3">
+              <div class="col-md-4">
+                <label for="validationServer01" class="form-label">가로 칸 개수</label>
+                <input type="text" class="form-control is-valid" id="validationServer01" value="13" required="">
+                <div class="valid-feedback">
+                  좋습니다!
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="validationServer02" class="form-label">세로 칸 개수</label>
+                <input type="text" class="form-control is-invalid" id="validationServer02" value="Otto" required="">
+                <div class="invalid-feedback">
+                  n ~ n 사이 숫자를 입력해주세요
+                </div>
+              </div>
+              <div class="col-12">
+                <button class="btn btn-primary" type="submit">이미지 생성하기</button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-    <footer class="footer mt-auto py-3 bg-body-tertiary">
-      <div class="container">
-          <footer class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
-            <div class="col mb-3">
-              <p class="text-body-secondary">Team Yesgram, <br>Konkuk University</p>
-              <p class="text-body-secondary">Graduation Project, 2023</p>
-            </div>
-            <div class="col mb-3">
-              <h5>Team Members</h5>
-              <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="https://github.com/3daysJin" class="nav-link p-0 text-body-secondary">Lee SeungJin(@3daysJin)</a></li>
-                <li class="nav-item mb-2"><a href="https://github.com/delena0702" class="nav-link p-0 text-body-secondary">Lee SeungYeop(@delena0702)</a></li>
-                <li class="nav-item mb-2"><a href="https://github.com/XsQuare01" class="nav-link p-0 text-body-secondary">Mun ByoungHwa(@XsQuare01)</a></li>
-              </ul>
-            </div>
-            <div class="col mb-3">
-              <h5>Open Source</h5>
-              <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="https://opencv.org/" class="nav-link p-0 text-body-secondary">OpenCV</a></li>
-                <li class="nav-item mb-2"><a href="https://getbootstrap.com/" class="nav-link p-0 text-body-secondary">Bootstrap</a></li>
-              </ul>
-            </div>
-            <div class="col mb-3">
-              <h5>Github Link</h5>
-              <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="https://github.com/3daysJin/YesGram_demo" class="nav-link p-0 text-body-secondary">Team Github</a></li>
-              </ul>
-            </div>
-          </footer>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer mt-auto py-3 bg-body-tertiary">
+    <div class="container">
+      <footer class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
+        <div class="col mb-3">
+          <p class="text-body-secondary">Team Yesgram, <br>Konkuk University</p>
+          <p class="text-body-secondary">Graduation Project, 2023</p>
         </div>
+        <div class="col mb-3">
+          <h5>Team Members</h5>
+          <ul class="nav flex-column">
+            <li class="nav-item mb-2"><a href="https://github.com/3daysJin" class="nav-link p-0 text-body-secondary">Lee
+                SeungJin(@3daysJin)</a></li>
+            <li class="nav-item mb-2"><a href="https://github.com/delena0702"
+                class="nav-link p-0 text-body-secondary">Lee SeungYeop(@delena0702)</a></li>
+            <li class="nav-item mb-2"><a href="https://github.com/XsQuare01"
+                class="nav-link p-0 text-body-secondary">Mun ByoungHwa(@XsQuare01)</a></li>
+          </ul>
+        </div>
+        <div class="col mb-3">
+          <h5>Open Source</h5>
+          <ul class="nav flex-column">
+            <li class="nav-item mb-2"><a href="https://opencv.org/" class="nav-link p-0 text-body-secondary">OpenCV</a>
+            </li>
+            <li class="nav-item mb-2"><a href="https://getbootstrap.com/"
+                class="nav-link p-0 text-body-secondary">Bootstrap</a></li>
+          </ul>
+        </div>
+        <div class="col mb-3">
+          <h5>Github Link</h5>
+          <ul class="nav flex-column">
+            <li class="nav-item mb-2"><a href="https://github.com/3daysJin/YesGram_demo"
+                class="nav-link p-0 text-body-secondary">Team Github</a></li>
+          </ul>
+        </div>
+      </footer>
+    </div>
   </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
-        crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+    crossorigin="anonymous"></script>
 
 </body>
 
