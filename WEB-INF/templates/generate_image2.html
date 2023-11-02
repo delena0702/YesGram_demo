@@ -27,7 +27,7 @@
 </button>
 
 <!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+<div class="modal fade" id="modal-confirm" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -35,11 +35,11 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        A 필터를 적용한 이미지를 선택하시겠습니까?
+        %% 필터를 적용한 이미지를 선택하시겠습니까?
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-        <button type="button" class="btn btn-primary">적용하기</button>
+        <button id="button-submit" type="button" class="btn btn-primary">적용하기</button>
       </div>
     </div>
   </div>
@@ -75,95 +75,29 @@
           <div class="row py-lg-5">
             <div class="col-lg-6 col-md-8 mx-auto">
               <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
-              <p class="lead text-body-secondary">Step 3. 퍼즐 선택하기</p>
+              <h2 class="mt-5 fw-light text-body-secondary">Step 3. 퍼즐 선택하기</h2>
             </div>
+          </div>
+          
+          <div class="text-start d-flex align-items-center">
+            <p class="d-inline m-0 lead flex-shrink-0 me-3">퍼즐 이름 : </p>
+            <input id="input-title" type="text" class="d-inline form-control" id="puzzle-name">
           </div>
         </section>
       
         <div class="album py-5 bg-body-tertiary">
           <div class="container">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-              <div class="col">
+              <div id="card-image" class="col">
                 <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
+                  <canvas id="output-puzzle" class="card-img-top"></canvas>
                   <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
+                    <h5 class="card-title">적용 방법</h5>
                     <p class="card-text">전처리 방법들에 대한 간략 내용</p>
                     <div class="d-flex justify-content-center align-items-center">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+                        <button id="button-select" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-confirm">
                           선택하기
                         </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-      
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-sm">
-                  <img src="doge2.webp" class="card-img-top" alt="...">                  
-                  <div class="card-body">
-                    <h5 class="card-title">적용 필터</h5>
-                    <p class="card-text">전처리 방법들에 대한 간략 내용</p>
-                    <div class="d-flex justify-content-center align-items-center">
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                        선택하기
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -209,7 +143,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
         crossorigin="anonymous"></script>
+    
+    {% autoescape off %}
+    <script>
+      var image_data = {{image_data}}
+      var large_width = {{large_width}}
+      var small_width = {{small_width}}
+      var large_height = {{large_height}}
+      var small_height = {{small_height}}
+    </script>
+    {% endautoescape %}
 
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/generate_image2.js"></script>
 </body>
 
 </html>

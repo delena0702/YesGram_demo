@@ -449,7 +449,7 @@ def ImageProcessor(src, width, height):
     src = cv2.imread(src, cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
-        sys.exit()
+        return json.dumps({})
     
     # Gray Scale
     gray = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
@@ -466,11 +466,20 @@ def ImageProcessor(src, width, height):
     gaus = ImageOutputProcessor.imageOutput(gaus, None)
     
     # json 리턴 - '방식'은 이후 바뀔 수 있음
-    json_obj = [
-        {'otsu': otsu},
-        {'aver': aver},
-        {'gaus': gaus}
-    ]
+    json_obj = {
+        'Otsu\'s method': {
+            'desc': "Otsu\'s method에 대한 설명",
+            'data': otsu
+            }, 
+        'Adaptive threshold-Arithmetic': {
+            'desc': "Adaptive threshold-Arithmetic에 대한 설명",
+            'data': aver
+            }, 
+        'Adaptive threshold-Gaussian': {
+            'desc': "Adaptive threshold-Gaussian에 대한 설명",
+            'data': gaus
+            }
+        }
 
     return json.dumps(json_obj)
 

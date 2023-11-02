@@ -1,3 +1,4 @@
+<!--@todo padding 추가, align 방식 변경, 디자인 수정-->
 <!doctype html>
 <html lang="ko" class="h-100" data-bs-theme="auto">
 
@@ -15,11 +16,13 @@
       }
     }
 
-    main>.container {
-      padding: 60px 15px 0;
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
     }
   </style>
 </head>
+
 
 <body class="d-flex flex-column h-100">
 
@@ -45,73 +48,79 @@
           </ul>
         </div>
       </div>
-      </div>
     </nav>
   </header>
-
-  <main class="flex-shrink-0">
+  <main>
     <section class="py-5 text-center container">
       <div class="row py-lg-5">
-        <div class="col-lg-6 col-md-8 mx-auto">
-          <h1 class="fw-light">YesGram, Image to Nonogram Puzzle Converter</h1>
-          <p class="lead text-body-secondary">나의 사진으로 만드는 하나뿐인 노노그램 퍼즐<br>사용자의 이미지를 노노그램 퍼즐로 변환할 수 있습니다.</p>
-        </div>
+        <form class="col-12" action="/generate/image/result" method="post" enctype="multipart/form-data">
+          <div class="col-lg-6 col-md-8 mx-auto">
+            <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
+          </div>
+
+          <h2 class="fw-light mt-5">Step 1. 이미지 선택하기</h2>
+          <div class="mb-3">
+            <input type="file" class="form-control form-control-lg" aria-label="Large file input example"
+              accept="image/*" name="image" onchange="fileCheck(this);">
+            <script type="text/javascript">
+              function fileCheck(el) {
+                if (!/\.(jpeg|jpg|png|gif|bmp)$/i.test(el.value)) {
+                  alert('이미지 파일만 업로드 가능합니다.');
+                  el.value = '';
+                  el.focus();
+                }
+              }
+            </script>
+          </div>
+
+          <h2 class="mt-5 text-center fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
+          <h4 class="mt-5 fw-light">실제 퍼즐 크기</h4>
+          <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할 지 결정 합니다.</h5>
+          <div class="mt-4 bd-example m-0 border-0">
+            <div class="row g-3">
+              <div class="col-md-2"></div>
+              <div class="col-md-4">
+                <label for="input-small-width" class="form-label">가로 칸 개수 <span class="lead fs-6">(1 ~
+                  30)</span></label>
+                <input type="number" name="small-width" class="form-control" id="input-small-width" min="1" max="30"
+                  step="1" value="10" required="">
+              </div>
+              <div class="col-md-4">
+                <label for="input-small-height" class="form-label">세로 칸 개수 <span class="lead fs-6">(1 ~
+                  30)</span></label>
+                <input type="number" name="small-height" class="form-control" id="input-small-height" min="1" max="30"
+                  step="1" value="10" required="">
+              </div>
+            </div>
+          </div>
+          <h4 class="mt-5 fw-light">이미지 분할 크기</h4>
+          <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할 지 결정합니다.</h5>
+          <div class="mt-4 bd-example m-0 border-0">
+            <div class="row g-3">
+              <div class="col-md-2"></div>
+              <div class="col-md-4">
+                <label for="input-large-width" class="form-label">가로 칸 개수 <span class="lead fs-6">(1 ~
+                    10)</span></label>
+                <input type="number" name="large-width" class="form-control" id="input-large-width" min="1" max="10"
+                  step="1" value="1" required="">
+              </div>
+              <div class="col-md-4">
+                <label for="input-large-height" class="form-label">세로 칸 개수 <span class="lead fs-6">(1 ~
+                    10)</span></label>
+                <input type="number" name="large-height" class="form-control" id="input-large-height" min="1" max="10"
+                  step="1" value="1" required="">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-5 col-12 text-center">
+            <button id="button-generate" type="submit" class="btn btn-primary">퍼즐 생성하기</button>
+          </div>
+        </form>
+
+
       </div>
     </section>
-    <div class="col-lg-6 col-md-8 mx-auto">
-      <a class="text-decoration-none" href="/generate/select">
-        <div class="card mb-3">
-          <div class="row g-0">
-            <div class="col-md-4 d-flex justify-content-center align-items-center rounded bg-body-secondary">
-              <img src="/static/image/doge.jpg" class="img-fluid rounded" alt="...">
-            </div>
-            <div class="col-md-8">
-              <div class="card-body">
-                <h5 class="card-title">Generate Puzzle</h5>
-                <p class="card-text"><small class="text-body-secondary">퍼즐 생성</small></p>
-                <p class="card-text">사용자가 업로드한 이미지를 OpenCV를 활용한 전처리 과정을 거쳐 해가 유일한 노노그램 퍼즐로 변환합니다.</p>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </a>
-      <a class="text-decoration-none" href="/list">
-        <div class="card mb-3">
-          <div class="row g-0">
-            <div class="col-md-4 d-flex justify-content-center align-items-center rounded bg-body-secondary">
-              <img src="/static/image/doge.jpg" class="img-fluid rounded" alt="...">
-            </div>
-            <div class="col-md-8">
-              <div class="card-body">
-                <h5 class="card-title">Puzzle List</h5>
-                <p class="card-text"><small class="text-body-secondary">퍼즐 목록</small></p>
-                <p class="card-text">사용자가 생성한 퍼즐 목록을 확인할 수 있습니다.</p>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </a>
-      <a class="text-decoration-none" href="/import">
-        <div class="card mb-3">
-          <div class="row g-0">
-            <div class="col-md-4 d-flex justify-content-center align-items-center rounded bg-body-secondary">
-              <img src="/static/image/doge.jpg" class="img-fluid rounded" alt="...">
-            </div>
-            <div class="col-md-8">
-              <div class="card-body">
-                <h5 class="card-title">Import Puzzle</h5>
-                <p class="card-text"><small class="text-body-secondary">퍼즐 뷸러오기</small></p>
-                <p class="card-text">본인 혹은 다른 사용자가 생성한 퍼즐을 불러올 수 있습니다.</p>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </a>
-    </div>
-
   </main>
 
   <footer class="footer mt-auto py-3 bg-body-tertiary">

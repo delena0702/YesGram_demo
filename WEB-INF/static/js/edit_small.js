@@ -79,6 +79,7 @@ async function save() {
 
     const pid = 0 | Utility.get_parameter('pid');
     LocalStorageManager.set_board(pid, board_context.board);
+    board_context.board = LocalStorageManager.get_board(pid);
     alert("저장되었습니다.");
 }
 
