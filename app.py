@@ -6,7 +6,7 @@ from ImageProcessor import kmean
 
 # 이미지 확장자 제한 - 추후 변경 가능
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-UPLOAD_FOLDER = 'WEB-INF\\static\\image'
+UPLOAD_FOLDER = 'image_cache'
 
 app = Flask(__name__, static_url_path='/static', static_folder='WEB-INF/static', template_folder='WEB-INF/templates')
 

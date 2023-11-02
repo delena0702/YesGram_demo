@@ -449,7 +449,7 @@ def ImageProcessor(src, width, height):
     src = cv2.imread(src, cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
-        sys.exit()
+        return json.dumps({})
     
     # Gray Scale
     gray = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
