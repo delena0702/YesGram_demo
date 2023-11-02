@@ -659,16 +659,22 @@ class BoardContext {
             }
         }
 
-        ctx.lineWidth = 2;
-
         for (let i = 0; i <= small_height; i++) {
             ctx.beginPath();
+            if (i % 5 == 0)
+                ctx.lineWidth = 3;
+            else
+                ctx.lineWidth = 1;
             ctx.moveTo(0 | (0) * small_width * gap, 0 | (i) * gap);
             ctx.lineTo(0 | (1) * small_width * gap, 0 | (i) * gap);
             ctx.stroke();
         }
 
         for (let j = 0; j <= small_width; j++) {
+            if (j % 5 == 0)
+                ctx.lineWidth = 3;
+            else
+                ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(0 | (j) * gap, 0 | (0) * small_height * gap);
             ctx.lineTo(0 | (j) * gap, 0 | (1) * small_height * gap);
@@ -802,6 +808,10 @@ class BoardContext {
 
         for (let i = mh; i <= height; i++) {
             ctx.beginPath();
+            if ((i - mh) % 5 == 0)
+                ctx.lineWidth = 3;
+            else
+                ctx.lineWidth = 1;
             ctx.moveTo(0 | (0) * gap, 0 | (i) * gap);
             ctx.lineTo(0 | (width) * gap, 0 | (i) * gap);
             ctx.stroke();
@@ -809,6 +819,10 @@ class BoardContext {
 
         for (let j = mw; j <= width; j++) {
             ctx.beginPath();
+            if ((j - mw) % 5 == 0)
+                ctx.lineWidth = 3;
+            else
+                ctx.lineWidth = 1;
             ctx.moveTo(0 | (j) * gap, 0 | (0) * gap);
             ctx.lineTo(0 | (j) * gap, 0 | (height) * gap);
             ctx.stroke();
