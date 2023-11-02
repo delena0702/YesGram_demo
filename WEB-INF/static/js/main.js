@@ -70,6 +70,9 @@ class Board {
             }
         }
 
+        if (idx)
+            string.push(String.fromCharCode(acc));
+
         const result = {
             size: [title, large_width, large_height, small_width, small_height],
             data: string.join('')
