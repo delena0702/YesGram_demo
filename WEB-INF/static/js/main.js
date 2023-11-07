@@ -424,6 +424,7 @@ class BoardContext {
 
     hint
     input_data
+    solve_cnt
 
     mw
     mh
@@ -467,6 +468,7 @@ class BoardContext {
                     0
                 )
             );
+            this.solve_cnt = 0;
 
             this.mw = Math.max(...this.hint[0].map(x => x.length), 1) + 1;
             this.mh = Math.max(...this.hint[1].map(x => x.length), 1) + 1;
@@ -1022,7 +1024,7 @@ class BoardContext {
     }
 
     click_small_solve(x, y, t) {
-        const { element, board, mw, mh } = this;
+        const { element, board, mw, mh, small_x, small_y } = this;
         const { width: c_width, height: c_height } = element;
 
         x = x * (0 | element.width) / element.clientWidth;
@@ -1048,7 +1050,18 @@ class BoardContext {
         if (!(0 <= cy && cy < small_height))
             return true;
 
+        const pre = this.input_data[cy][cx];
         this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
+
+        if (pre == board.data[small_y * small_height + cy][small_x * small_width + cx])
+            this.solve_cnt--;
+        if (this.input_data[cy][cx]
+            == board.data[small_y * small_height + cy][small_x * small_width + cx])
+            this.solve_cnt++;
+
+        if (this.solve_cnt == small_width * small_height)
+            this.solve_clear();
+
         this.resize_element();
         return false;
     }
@@ -1155,6 +1168,10 @@ class BoardContext {
         if (change_stack.length == 0)
             return null;
         return change_stack.pop();
+    }
+    
+    solve_clear() {
+        alert();
     }
 }
 
