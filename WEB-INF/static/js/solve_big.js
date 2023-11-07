@@ -7,7 +7,6 @@ function init() {
     const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
     const solve_data = LocalStorageManager.get_solve_data(pid);
-    console.log(solve_data);
 
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SOLVE, {
         solve_data: solve_data,
