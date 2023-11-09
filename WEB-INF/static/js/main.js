@@ -146,6 +146,11 @@ class Solver {
         board.solve()
     }
 
+    make_solvable_puzzle() {
+        const { board } = this
+        board.make_solvable_puzzle();
+    }
+
     get_result() {
         const { board } = this
         return JSON.parse(JSON.stringify(board.board))
@@ -382,6 +387,59 @@ class PuzzleBoard {
                     }
                 }
             }
+        }
+    }
+
+    make_solvable_puzzle() {
+        const { width: M, height: N, board, change_listener: change } = this;
+
+        const pre = board.map(x => x.map(x => x));
+
+        let hint = Solver.make_hint_from_array(pre);
+        this.attach_hint(hint);
+        this.clear_board();
+
+        while (true) {
+            this.solve();
+
+            const unsolved_cnt = board.reduce((a, x) =>
+                a + x.reduce((a, x) =>
+                    a + (x == 0 ? 1 : 0)
+                    , 0)
+                , 0);
+            
+            if (unsolved_cnt == 0)
+                break;
+
+            const margin = Array.from({ length: N + M }, () => 0);
+            for (let i = 0; i < N; i++)
+                margin[i] = M - (hint[0][i].reduce((a, x) => a + x, 0) + hint[0][i].length - 1);
+            for (let i = 0; i < M; i++)
+                margin[N + i] = N - (hint[1][i].reduce((a, x) => a + x, 0) + hint[1][i].length - 1);
+
+            let cx = -1, cy = -1, mn = Infinity;
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < M; j++) {
+                    if (board[i][j])
+                        continue;
+                    if (pre[i][j] != 2)
+                        continue;
+
+                    const value = margin[i] + margin[N + j];
+                    if (mn <= value)
+                        continue;
+
+                    cx = j;
+                    cy = i;
+                    mn = value;
+                }
+            }
+
+            pre[cy][cx] = 1;
+
+            hint = Solver.make_hint_from_array(pre);
+            this.attach_hint(hint);
+            this.clear_board();
         }
     }
 
