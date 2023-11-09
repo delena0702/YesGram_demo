@@ -125,6 +125,26 @@ class Board {
                 x + 1
             )
         );
+
+        const solver = new Solver(small_width, small_height);
+        for (let i = 0; i < large_height; i++) {
+            for (let j = 0; j < large_width; j++) {
+                solver.board.board = Array.from({ length: small_height }, (_, y) =>
+                    Array.from({ length: small_width }, (_, x) =>
+                        board.data[small_height * i + y][small_width * j + x]
+                    )
+                );
+
+                solver.make_solvable_puzzle();
+
+                for (let y = 0; y < small_height; y++) {
+                    for (let x = 0; x < small_width; x++) {
+                        board.data[small_height * i + y][small_width * j + x] = solver.board.board[y][x];
+                    }
+                }
+            }
+        }
+
         return board;
     }
 }
@@ -331,9 +351,7 @@ class PuzzleBoard {
 
     solve() {
         const { width: M, height: N, board, hint, change_listener: change } = this;
-
-        this.clear_board();
-
+        
         const queue = Array.from({ length: N + M }, (_, i) => i);
         const in_queue = new Array(N + M).fill(true);
         while (queue.length) {
@@ -439,7 +457,6 @@ class PuzzleBoard {
 
             hint = Solver.make_hint_from_array(pre);
             this.attach_hint(hint);
-            this.clear_board();
         }
     }
 
