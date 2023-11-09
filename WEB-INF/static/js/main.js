@@ -141,9 +141,9 @@ class Solver {
         board.attach_hint(hint)
     }
 
-    async solve() {
+    solve() {
         const { board } = this
-        await board.solve()
+        board.solve()
     }
 
     get_result() {
@@ -324,7 +324,7 @@ class PuzzleBoard {
         return retval;
     }
 
-    async solve() {
+    solve() {
         const { width: M, height: N, board, hint, change_listener: change } = this;
 
         this.clear_board();
@@ -340,7 +340,7 @@ class PuzzleBoard {
                 const arr = Array.from({ length: M }, (_, j) => board[i][j]);
                 const result = this.solve_line(hint[0][i], arr);
 
-                await change([idx, queue]);
+                change([idx, queue]);
 
                 for (let j = 0; j < M; j++) {
                     if (result[j] == -1) {
@@ -351,7 +351,7 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[j];
-                    await change([idx, queue]);
+                    change([idx, queue]);
 
                     if (!in_queue[N + j]) {
                         queue.push(N + j);
@@ -374,7 +374,7 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[i];
-                    await change([idx, queue]);
+                    change([idx, queue]);
 
                     if (!in_queue[i]) {
                         queue.push(i);
