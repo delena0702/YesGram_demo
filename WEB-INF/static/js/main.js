@@ -452,7 +452,7 @@ class PuzzleBoard {
                     mn = value;
                 }
             }
-            
+
             pre[cy][cx] = 1;
 
             hint = Solver.make_hint_from_array(pre);
@@ -479,6 +479,46 @@ class PuzzleBoard {
     }
 }
 
+class CanvasInfo {
+    width
+    height
+    gap
+    offset_x
+    offset_y
+
+    constructor(context) {
+        const { board, mode, element } = context;
+        const { width: c_width, height: c_height } = element;
+        const { large_width, large_height, small_width, small_height } = board;
+
+        let width = 0, height = 0;
+        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
+            width = small_width + context.mw;
+            height = small_height + context.mh;
+        } else if (ConfigValue.isBig(mode)) {
+            width = large_width * small_width;
+            height = large_height * small_height;
+        } else {
+            width = small_width;
+            height = small_height;
+        }
+
+        const r = config.board_context_padding_ratio;
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        this.width = width;
+        this.height = height;
+        this.gap = gap;
+        this.offset_x = offset_x;
+        this.offset_y = offset_y;
+    }
+}
+
 class BoardContext {
     element
     context
@@ -500,6 +540,12 @@ class BoardContext {
     mw
     mh
 
+    canvas_info
+
+    is_clicked
+    sx
+    sy
+
     cx
     cy
 
@@ -514,12 +560,15 @@ class BoardContext {
         this.mode = mode;
         this.change_stack = [];
 
+        this.is_clicked = false;
+        this.sx = -1;
+        this.sy = -1;
+
         this.cx = -1;
         this.cy = -1;
 
         if (param)
             Object.assign(this, param);
-
 
         let width = 0, height = 0;
         if (mode == ConfigValue.MODE_SMALL_SOLVE) {
@@ -568,6 +617,7 @@ class BoardContext {
     init() {
         this.init_canvas();
         this.init_resize();
+        this.canvas_info = new CanvasInfo(this);
     }
 
     get_element() {
@@ -592,7 +642,7 @@ class BoardContext {
 
     resize_element() {
         const element = this.get_element();
-        const max_size = 0 | document.documentElement.clientHeight * config['board_max_height_ratio'];
+        const max_size = 0 | document.documentElement.clientHeight * config.board_max_height_ratio;
         const size = Math.min(element.parentElement.clientWidth, max_size);
 
         element.width = BoardContext.CANVAS_SIZE;
@@ -609,12 +659,26 @@ class BoardContext {
         const { element } = this;
         this.context = element.getContext('2d');
 
-        object.element.addEventListener('click', (e) => {
-            this.click(e.offsetX, e.offsetY, 1);
-        });
-        object.element.oncontextmenu = (e) => {
-            return this.click(e.offsetX, e.offsetY, 2);
+        // object.element.onclick = (e) => {
+        //     return this.click(e.offsetX, e.offsetY, 1);
+        // };
+        object.element.oncontextmenu = (e) => false;
+
+        object.element.onmousedown = (e) => {
+            this.is_clicked = false;
+            // TODO
+            return false;
         };
+
+        object.element.onmousemove = (e) => {
+            // return this.click(e.offsetX, e.offsetY, e.button);
+            return false;
+        };
+
+        object.element.onmouseup = (e) => {
+            return this.click(e.offsetX, e.offsetY, e.button);
+        };
+
         object.element.addEventListener('mousemove', (e) => {
             this.move_mouse(e.offsetX, e.offsetY);
         });
@@ -994,23 +1058,13 @@ class BoardContext {
     }
 
     click_big_edit(x, y, t) {
-        const { element, board } = this;
-        const { width: c_width, height: c_height } = element;
+        const { element, board, canvas_info } = this;
+        const {gap, offset_x, offset_y} = canvas_info;
 
         x = x * (0 | element.width) / element.clientWidth;
         y = y * (0 | element.height) / element.clientHeight;
 
         const { large_width, large_height, small_width, small_height } = board;
-        const width = large_width * small_width;
-        const height = large_height * small_height;
-
-        const r = config['board_context_padding_ratio'];
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
 
         const cx = Math.floor((x - offset_x) / (gap * small_width));
         const cy = Math.floor((y - offset_y) / (gap * small_height));
@@ -1026,24 +1080,14 @@ class BoardContext {
     }
 
     click_small_edit(x, y, t) {
-        const { element, board } = this;
-        const { width: c_width, height: c_height } = element;
+        const { element, board, canvas_info } = this;
+        const {gap, offset_x, offset_y} = canvas_info;
 
         x = x * (0 | element.width) / element.clientWidth;
         y = y * (0 | element.height) / element.clientHeight;
 
-        const { large_width, large_height, small_width, small_height } = board;
-        const width = small_width;
-        const height = small_height;
-
-        const r = config['board_context_padding_ratio'];
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
-
+        const { small_width, small_height } = board;
+        
         const cx = Math.floor((x - offset_x) / (gap));
         const cy = Math.floor((y - offset_y) / (gap));
 
@@ -1063,26 +1107,16 @@ class BoardContext {
     }
 
     click_big_solve(x, y, t) {
-        const { element, board } = this;
-        const { width: c_width, height: c_height } = element;
+        const { element, board, canvas_info } = this;
+        const { large_width, large_height, small_width, small_height } = board;
+        const {gap, offset_x, offset_y} = canvas_info;
 
         x = x * (0 | element.width) / element.clientWidth;
         y = y * (0 | element.height) / element.clientHeight;
 
-        const { large_width, large_height, small_width, small_height } = board;
-        const width = large_width * small_width;
-        const height = large_height * small_height;
-
-        const r = config['board_context_padding_ratio'];
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
-
         const cx = Math.floor((x - offset_x) / (gap * small_width));
         const cy = Math.floor((y - offset_y) / (gap * small_height));
+        console.log(cx, cy, "<<<", canvas_info);
 
         if (!(0 <= cx && cx < large_width))
             return true;
@@ -1095,23 +1129,12 @@ class BoardContext {
     }
 
     click_small_solve(x, y, t) {
-        const { element, board, mw, mh, small_x, small_y } = this;
-        const { width: c_width, height: c_height } = element;
+        const { element, board, mw, mh, small_x, small_y, canvas_info } = this;
+        const { small_width, small_height } = board;
+        const { gap, offset_x, offset_y } = canvas_info;
 
         x = x * (0 | element.width) / element.clientWidth;
         y = y * (0 | element.height) / element.clientHeight;
-
-        const { small_width, small_height } = board;
-        const width = mw + small_width;
-        const height = mh + small_height;
-
-        const r = config['board_context_padding_ratio'];
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
 
         const cx = Math.floor((x - offset_x) / (gap) - mw);
         const cy = Math.floor((y - offset_y) / (gap) - mh);
@@ -1122,6 +1145,9 @@ class BoardContext {
             return true;
 
         const pre = this.input_data[cy][cx];
+        if (t == 0) t = 1;
+        else if (t == 2) t = 2;
+        else t = 0;
         this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
 
         if (pre == board.data[small_y * small_height + cy][small_x * small_width + cx])
