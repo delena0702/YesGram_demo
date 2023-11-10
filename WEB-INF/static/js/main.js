@@ -452,11 +452,7 @@ class PuzzleBoard {
                     mn = value;
                 }
             }
-
-            if (cx == -1) {
-                console.log(board);
-                console.log(pre);
-            }
+            
             pre[cy][cx] = 1;
 
             hint = Solver.make_hint_from_array(pre);

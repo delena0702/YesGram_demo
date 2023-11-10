@@ -171,15 +171,15 @@ def ImageProcessor(src, width, height):
     
     json_obj = {
         'Otsu\'s method': {
-            'desc': "Otsu\'s method에 대한 설명",
+            'desc': "대비가 큰 이미지에 적절하며, 퍼즐의 크기가 클 때 적합한 방법입니다.",
             'data': otsu
             }, 
         'Adaptive threshold-Arithmetic': {
-            'desc': "Adaptive threshold-Arithmetic에 대한 설명",
+            'desc': "대비가 낮은 이미지에 적절하며, 선이 굵고 진하게 나타나는 방법입니다.",
             'data': aver
             }, 
         'Adaptive threshold-Gaussian': {
-            'desc': "Adaptive threshold-Gaussian에 대한 설명",
+            'desc': "대비가 낮은 이미지에 적절하며, 세세한 부분이 잘 나타나는 방법입니다.",
             'data': gaus
             }
         }
