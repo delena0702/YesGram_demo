@@ -5,7 +5,7 @@ const storage_key_solve_data = 'YESGRAM_DATA_SOLVE';
 // Default Config Values
 var config = {
     'board_max_height_ratio': 1.5,
-    'board_context_padding_ratio': 0.1,
+    'board_context_padding_ratio': 0.01,
 }
 
 class ConfigValue {
@@ -1229,6 +1229,10 @@ class BoardContext {
         const lx = Math.min(ssx, cx), rx = Math.max(ssx, cx);
         const ly = Math.min(ssy, cy), ry = Math.max(ssy, cy);
 
+        this.change_stack.push(JSON.stringify([input_data, this.solve_cnt]));
+        if (this.change_stack.length > ConfigValue.CHANGE_STACK_LIMIT)
+            this.change_stack.shift();
+
         for (let i = ly; i <= ry; i++) {
             for (let j = lx; j <= rx; j++) {
                 if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
@@ -1238,6 +1242,8 @@ class BoardContext {
                     this.solve_cnt++;
             }
         }
+
+        console.log(this.solve_cnt);
 
         if (this.solve_cnt == small_width * small_height)
             this.solve_clear();

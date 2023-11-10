@@ -1,6 +1,6 @@
 var config = {
-    'board_max_height_ratio': 0.8,
-    'board_context_padding_ratio': 0.1,
+    'board_max_height_ratio': 0.7,
+    'board_context_padding_ratio': 0.01,
 }
 
 function init() {
@@ -9,12 +9,42 @@ function init() {
     const small_y = 0 | Utility.get_parameter('y');
     const board = LocalStorageManager.get_board(pid);
     const solved_data = LocalStorageManager.get_solve_data(pid);
+    const start_time = new Date().getTime();
+    const interval = setInterval(() => {
+        const second = 0 | (new Date().getTime() - start_time) / 1000;
+        document.getElementById('output-time').textContent = `${(0 | second / 60).toString().padStart(2, '0')}:${(second % 60).toString().padStart(2, '0')}`;
+    }, 1000);
 
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_SOLVE, {
         solve_data: solved_data,
         small_x: small_x,
         small_y: small_y,
         solve_clear: solve_clear
+    });
+
+    document.getElementById('button-reset').addEventListener('click', ()=>{
+        board_context.input_data = board_context.input_data.map(x =>
+            x.map(x =>
+                0
+            )
+        );
+
+        board_context.change_stack = [];
+        board_context.solve_cnt = 0;
+        board_context.resize_element();
+    });
+
+    document.getElementById('button-undo').addEventListener('click', ()=>{
+        const change = board_context.change_stack.pop();
+        if (change == null)
+            return;
+
+        const [input_data, solve_cnt] = JSON.parse(change);
+        console.log(change);
+        board_context.input_data = input_data;
+        board_context.solve_cnt = solve_cnt;
+
+        board_context.resize_element();
     });
 
     document.getElementById('button-retry').addEventListener('click', ()=>{
@@ -25,11 +55,16 @@ function init() {
         location.href = `/solve/big?pid=${pid}`;
     });
 
+    document.getElementById('button-return2').addEventListener('click', ()=>{
+        location.href = `/solve/big?pid=${pid}`;
+    });
+
     function solve_clear() {
-        const element = document.getElementById('modal-result');
+        clearInterval(interval);
+        const second = 0 | (new Date().getTime() - start_time) / 1000;
     
         document.getElementById('modal-title').textContent = `클리어!`;
-        document.getElementById('modal-body').textContent = `00:21`;
+        document.getElementById('modal-body').textContent = `클리어 시간 : ${(0 | second / 60).toString().padStart(2, '0')}:${(second % 60).toString().padStart(2, '0')}`;
     
         const solve_data = LocalStorageManager.get_solve_data(pid);
         solve_data[small_y][small_x] = 1;
