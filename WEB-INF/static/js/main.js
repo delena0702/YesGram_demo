@@ -781,7 +781,11 @@ class BoardContext {
     }
 
     display() {
-        const { mode } = this;
+        const { element, context: ctx, mode } = this;
+
+        ctx.fillStyle = "#f8f8f8";
+        ctx.fillRect(0, 0, element.width, element.height);
+
         switch (mode) {
             case ConfigValue.MODE_BIG_SHOW:
                 this.display_big_show();
