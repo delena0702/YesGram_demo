@@ -438,7 +438,7 @@ class PuzzleBoard {
             let cx = -1, cy = -1, mn = Infinity;
             for (let i = 0; i < N; i++) {
                 for (let j = 0; j < M; j++) {
-                    if (board[i][j])
+                    if (board[i][j] != 0)
                         continue;
                     if (pre[i][j] != 2)
                         continue;
@@ -453,10 +453,24 @@ class PuzzleBoard {
                 }
             }
 
+            if (cx == -1) {
+                console.log(board);
+                console.log(pre);
+            }
             pre[cy][cx] = 1;
 
             hint = Solver.make_hint_from_array(pre);
             this.attach_hint(hint);
+        }
+
+        hint = Solver.make_hint_from_array(pre);
+        this.attach_hint(hint);
+        this.clear_board();
+        this.solve();
+
+        if (JSON.stringify(pre) != JSON.stringify(board)) {
+            this.board = pre;
+            this.make_solvable_puzzle();
         }
     }
 
