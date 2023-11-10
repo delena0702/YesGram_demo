@@ -993,11 +993,12 @@ class BoardContext {
         ctx.textBaseline = "middle";
 
         for (let i = 0; i < hint[0].length; i++) {
-            const l = hint[0][i].length;
+            const l = Math.max(hint[0][i].length, 1);
 
             for (let j = 0; j < l; j++) {
+                const value = hint[0][i].length ? hint[0][i][j] : 0;
                 ctx.fillText(
-                    hint[0][i][j],
+                    value,
                     0 | (mw - l + j + 0.5) * gap,
                     0 | (mh + i + 0.5) * gap
                 );
@@ -1005,11 +1006,12 @@ class BoardContext {
         }
 
         for (let i = 0; i < hint[1].length; i++) {
-            const l = hint[1][i].length;
+            const l = Math.max(hint[1][i].length, 1);
 
             for (let j = 0; j < l; j++) {
+                const value = hint[1][i].length ? hint[1][i][j] : 0;
                 ctx.fillText(
-                    hint[1][i][j],
+                    value,
                     0 | (mw + i + 0.5) * gap,
                     0 | (mh - l + j + 0.5) * gap
                 );
