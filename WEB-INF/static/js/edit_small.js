@@ -23,9 +23,7 @@ function undo() {
     if (change == null)
         return;
 
-    [x, y] = change;
-    const value = board_context.board.data[y][x];
-    board_context.board.data[y][x] = 3 - value;
+    board_context.board.data = JSON.parse(change);
     board_context.resize_element();
 }
 
@@ -34,6 +32,7 @@ function reset() {
     const board = LocalStorageManager.get_board(pid);
 
     board_context.board = board;
+    board_context.change_stack = [];
     board_context.resize_element();
 }
 

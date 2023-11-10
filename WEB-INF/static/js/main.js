@@ -21,6 +21,8 @@ class ConfigValue {
     static FILTER_CURSOR = 11
     static FILTER_CURSOR2 = 12
 
+    static CHANGE_STACK_LIMIT = 30
+
     static isBig(value) {
         if ([this.MODE_BIG_SHOW, this.MODE_BIG_EDIT, this.MODE_BIG_SOLVE].includes(value))
             return true;
@@ -658,27 +660,34 @@ class BoardContext {
         const { element } = this;
         this.context = element.getContext('2d');
 
-        element.oncontextmenu = (e) => false;
+        element.oncontextmenu = () => false;
 
         element.onmousedown = (e) => {
             const { x, y } = this.transform_mouse_pos(e);
             const { canvas_info } = this;
-            const { gap, offset_x, offset_y } = canvas_info;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
 
             this.is_clicked = true;
             this.sx = Math.floor((x - offset_x) / gap);
             this.sy = Math.floor((y - offset_y) / gap);
+
+            this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+            this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+
             return false;
         };
 
         element.onmousemove = (e) => {
             const { x, y } = this.transform_mouse_pos(e);
             const { canvas_info, is_clicked } = this;
-            const { gap, offset_x, offset_y } = canvas_info;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
 
             if (!is_clicked) {
                 this.sx = Math.floor((x - offset_x) / gap);
                 this.sy = Math.floor((y - offset_y) / gap);
+
+                this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+                this.sy = Math.max(Math.min(this.sy, height - 1), 0);
             }
 
             const cx = (x - offset_x) / gap;
@@ -978,7 +987,7 @@ class BoardContext {
     }
 
     display_filter() {
-        const { board, context: ctx, filter_board, sx, sy, cx, cy, mode, canvas_info } = this;
+        const { board, context: ctx, filter_board, sx, sy, cx, cy, mode, canvas_info, is_clicked } = this;
         const { small_width, small_height } = board;
         const { width, height } = canvas_info;
 
@@ -1004,8 +1013,11 @@ class BoardContext {
             }
         }
 
-        const lx = Math.min(cx, sx), rx = Math.max(cx, sx);
-        const ly = Math.min(cy, sy), ry = Math.max(cy, sy);
+        let ssx = is_clicked ? sx : cx;
+        let ssy = is_clicked ? sy : cy;
+        
+        const lx = Math.min(cx, ssx), rx = Math.max(cx, ssx);
+        const ly = Math.min(cy, ssy), ry = Math.max(cy, ssy);
         
         if (cx >= 0) {
             this.fill_filter(
@@ -1093,6 +1105,8 @@ class BoardContext {
         const ly = offset_y + Math.min(sy, cy), ry = offset_y + Math.max(sy, cy);
 
         this.change_stack.push(JSON.stringify(board.data));
+        if (this.change_stack.length > ConfigValue.CHANGE_STACK_LIMIT)
+            this.change_stack.shift();
 
         if (t == 0) t = 1;
         else if (t == 2) t = 2;
@@ -1123,7 +1137,7 @@ class BoardContext {
     }
 
     click_small_solve(cx, cy, t) {
-        const { board, small_x, small_y, mw, mh } = this;
+        const { board, small_x, small_y, mw, mh, input_data, sx, sy } = this;
         const { small_width, small_height } = board;
 
         cx = Math.floor(cx - mw);
@@ -1138,13 +1152,32 @@ class BoardContext {
         if (t == 0) t = 1;
         else if (t == 2) t = 2;
         else t = 0;
-        this.input_data[cy][cx] = (this.input_data[cy][cx] + t) % 3;
+        
+        if (t == 0)
+            return true;
+        if (sx < mw || sy < mh)
+            return true;
 
-        if (pre == board.data[small_y * small_height + cy][small_x * small_width + cx])
-            this.solve_cnt--;
-        if (this.input_data[cy][cx]
-            == board.data[small_y * small_height + cy][small_x * small_width + cx])
-            this.solve_cnt++;
+        const offset_x = small_x * small_width;
+        const offset_y = small_y * small_height;
+
+        const ssx = sx - mw;
+        const ssy = sy - mh;
+
+        const value = t;
+
+        const lx = Math.min(ssx, cx), rx = Math.max(ssx, cx);
+        const ly = Math.min(ssy, cy), ry = Math.max(ssy, cy);
+        
+        for (let i = ly; i <= ry; i++) {
+            for (let j = lx; j <= rx; j++) {
+                if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
+                    this.solve_cnt--;
+                input_data[i][j] = value;
+                if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
+                    this.solve_cnt++;
+            }
+        }
 
         if (this.solve_cnt == small_width * small_height)
             this.solve_clear();
