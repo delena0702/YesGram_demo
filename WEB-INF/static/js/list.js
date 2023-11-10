@@ -10,6 +10,7 @@ function list_all() {
 
     const puzzle_list = LocalStorageManager.get_puzzle_list();
 
+    const all_switch = [];
     for (const puzzle_id of puzzle_list) {
         const node = base_node.cloneNode(true);
         const puzzle = LocalStorageManager.get_board(puzzle_id);
@@ -30,18 +31,31 @@ function list_all() {
             location.href = "/list";
         });
 
-        node.querySelector("#list-column > div > div > div > div > div:nth-child(2) > div > input").addEventListener('click', (e) => {
-            e.stopPropagation();
+        const check = node.querySelector("#list-column > div > div > div > div > div:nth-child(2) > div > input");
+        const canvas = node.querySelector("#list-column > div > div > canvas");
 
+        check.addEventListener('click', (e) => {
+            console.log(e.target.checked);
             draw_board(canvas, puzzle, solve_data, e.target.checked);
+            e.stopPropagation();
         });
 
-        const canvas = node.querySelector("#list-column > div > div > canvas");
         draw_board(canvas, puzzle, solve_data, true);
 
         node.id = "";
         list_container.appendChild(node);
+        all_switch.push(check);
     }
+
+    const total_switch = document.getElementById('input-total-blind');
+    total_switch.addEventListener('click', (e) => {
+        for (check of all_switch) {
+            check.checked = !e.target.checked;
+            check.dispatchEvent(new MouseEvent('click'));
+        }
+
+        e.stopPropagation();
+    });
 }
 
 function draw_board(canvas, puzzle, solve_data, state) {

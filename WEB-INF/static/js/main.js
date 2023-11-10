@@ -5,7 +5,7 @@ const storage_key_solve_data = 'YESGRAM_DATA_SOLVE';
 // Default Config Values
 var config = {
     'board_max_height_ratio': 1.5,
-    'board_context_padding_ratio': 0.1,
+    'board_context_padding_ratio': 0.01,
 }
 
 class ConfigValue {
@@ -27,6 +27,46 @@ class ConfigValue {
         if ([this.MODE_BIG_SHOW, this.MODE_BIG_EDIT, this.MODE_BIG_SOLVE].includes(value))
             return true;
         return false;
+    }
+}
+
+class CanvasInfo {
+    width
+    height
+    gap
+    offset_x
+    offset_y
+
+    constructor(context) {
+        const { board, mode, element } = context;
+        const { width: c_width, height: c_height } = element;
+        const { large_width, large_height, small_width, small_height } = board;
+
+        let width = 0, height = 0;
+        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
+            width = small_width + context.mw;
+            height = small_height + context.mh;
+        } else if (ConfigValue.isBig(mode)) {
+            width = large_width * small_width;
+            height = large_height * small_height;
+        } else {
+            width = small_width;
+            height = small_height;
+        }
+
+        const r = config.board_context_padding_ratio;
+        const real_width = c_width * (1 - 2 * r);
+        const real_height = c_height * (1 - 2 * r);
+        const gap = Math.min(real_width / width, real_height / height);
+
+        const offset_x = r * c_width + (real_width - gap * width) / 2;
+        const offset_y = r * c_height + (real_height - gap * height) / 2;
+
+        this.width = width;
+        this.height = height;
+        this.gap = gap;
+        this.offset_x = offset_x;
+        this.offset_y = offset_y;
     }
 }
 
@@ -353,7 +393,7 @@ class PuzzleBoard {
 
     solve() {
         const { width: M, height: N, board, hint, change_listener: change } = this;
-        
+
         const queue = Array.from({ length: N + M }, (_, i) => i);
         const in_queue = new Array(N + M).fill(true);
         while (queue.length) {
@@ -427,7 +467,7 @@ class PuzzleBoard {
                     a + (x == 0 ? 1 : 0)
                     , 0)
                 , 0);
-            
+
             if (unsolved_cnt == 0)
                 break;
 
@@ -478,46 +518,6 @@ class PuzzleBoard {
         for (let i = 0; i < height; i++)
             for (let j = 0; j < width; j++)
                 board[i][j] = 0
-    }
-}
-
-class CanvasInfo {
-    width
-    height
-    gap
-    offset_x
-    offset_y
-
-    constructor(context) {
-        const { board, mode, element } = context;
-        const { width: c_width, height: c_height } = element;
-        const { large_width, large_height, small_width, small_height } = board;
-
-        let width = 0, height = 0;
-        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
-            width = small_width + context.mw;
-            height = small_height + context.mh;
-        } else if (ConfigValue.isBig(mode)) {
-            width = large_width * small_width;
-            height = large_height * small_height;
-        } else {
-            width = small_width;
-            height = small_height;
-        }
-
-        const r = config.board_context_padding_ratio;
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
-
-        this.width = width;
-        this.height = height;
-        this.gap = gap;
-        this.offset_x = offset_x;
-        this.offset_y = offset_y;
     }
 }
 
@@ -643,8 +643,10 @@ class BoardContext {
 
     resize_element() {
         const element = this.get_element();
+        element.classList.add('w-100');
         const max_size = 0 | document.documentElement.clientHeight * config.board_max_height_ratio;
         const size = Math.min(element.parentElement.clientWidth, max_size);
+        element.classList.remove('w-100');
 
         element.width = BoardContext.CANVAS_SIZE;
         element.height = BoardContext.CANVAS_SIZE;
@@ -660,58 +662,115 @@ class BoardContext {
         const { element } = this;
         this.context = element.getContext('2d');
 
-        element.oncontextmenu = () => false;
+        const is_touch = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
 
-        element.onmousedown = (e) => {
-            const { x, y } = this.transform_mouse_pos(e);
-            const { canvas_info } = this;
-            const { width, height, gap, offset_x, offset_y } = canvas_info;
+        if (is_touch) {
+            // Touch Device
 
-            this.is_clicked = true;
-            this.sx = Math.floor((x - offset_x) / gap);
-            this.sy = Math.floor((y - offset_y) / gap);
+            element.ontouchstart = (e) => {
+                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+                const { canvas_info } = this;
+                const { width, height, gap, offset_x, offset_y } = canvas_info;
 
-            this.sx = Math.max(Math.min(this.sx, width - 1), 0);
-            this.sy = Math.max(Math.min(this.sy, height - 1), 0);
-
-            return false;
-        };
-
-        element.onmousemove = (e) => {
-            const { x, y } = this.transform_mouse_pos(e);
-            const { canvas_info, is_clicked } = this;
-            const { width, height, gap, offset_x, offset_y } = canvas_info;
-
-            if (!is_clicked) {
+                this.is_clicked = true;
                 this.sx = Math.floor((x - offset_x) / gap);
                 this.sy = Math.floor((y - offset_y) / gap);
 
                 this.sx = Math.max(Math.min(this.sx, width - 1), 0);
                 this.sy = Math.max(Math.min(this.sy, height - 1), 0);
-            }
 
-            const cx = (x - offset_x) / gap;
-            const cy = (y - offset_y) / gap;
-            return this.move_mouse(cx, cy);
-        };
+                if (e.touches.length >= 2)
+                    return true;
+                return false;
+            };
 
-        element.onmouseup = (e) => {
-            const { x, y } = this.transform_mouse_pos(e);
-            const { canvas_info } = this;
-            const { gap, offset_x, offset_y } = canvas_info;
+            element.ontouchmove = (e) => {
+                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+                const { canvas_info, is_clicked } = this;
+                const { width, height, gap, offset_x, offset_y } = canvas_info;
 
-            const cx = (x - offset_x) / gap;
-            const cy = (y - offset_y) / gap;
+                if (!is_clicked) {
+                    this.sx = Math.floor((x - offset_x) / gap);
+                    this.sy = Math.floor((y - offset_y) / gap);
 
-            this.is_clicked = false;
-            return this.click(cx, cy, e.button);
-        };
+                    this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+                    this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+                }
+
+                const cx = (x - offset_x) / gap;
+                const cy = (y - offset_y) / gap;
+                return this.move_mouse(cx, cy);
+            };
+
+            element.ontouchend = (e) => {
+                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+                const { canvas_info } = this;
+                const { gap, offset_x, offset_y } = canvas_info;
+
+                const cx = (x - offset_x) / gap;
+                const cy = (y - offset_y) / gap;
+
+                this.is_clicked = false;
+                return this.click(cx, cy, -1);
+            };
+        }
+
+        else {
+            // Mouse Device
+            element.oncontextmenu = () => false;
+
+            element.onmousedown = (e) => {
+                const { x, y } = this.transform_mouse_pos(e);
+                const { canvas_info } = this;
+                const { width, height, gap, offset_x, offset_y } = canvas_info;
+
+                this.is_clicked = true;
+                this.sx = Math.floor((x - offset_x) / gap);
+                this.sy = Math.floor((y - offset_y) / gap);
+
+                this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+                this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+
+                return false;
+            };
+
+            element.onmousemove = (e) => {
+                const { x, y } = this.transform_mouse_pos(e);
+                const { canvas_info, is_clicked } = this;
+                const { width, height, gap, offset_x, offset_y } = canvas_info;
+
+                if (!is_clicked) {
+                    this.sx = Math.floor((x - offset_x) / gap);
+                    this.sy = Math.floor((y - offset_y) / gap);
+
+                    this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+                    this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+                }
+
+                const cx = (x - offset_x) / gap;
+                const cy = (y - offset_y) / gap;
+                return this.move_mouse(cx, cy);
+            };
+
+            element.onmouseup = (e) => {
+                const { x, y } = this.transform_mouse_pos(e);
+                const { canvas_info } = this;
+                const { gap, offset_x, offset_y } = canvas_info;
+
+                const cx = (x - offset_x) / gap;
+                const cy = (y - offset_y) / gap;
+
+                this.is_clicked = false;
+                return this.click(cx, cy, e.button);
+            };
+        }
     }
 
     transform_mouse_pos(e) {
+        const offset = e.target.getBoundingClientRect();
         const { element } = this;
-        const x = e.offsetX * element.width / element.clientWidth;
-        const y = e.offsetY * element.height / element.clientHeight;
+        const x = (e.clientX - offset.x) * element.width / element.clientWidth;
+        const y = (e.clientY - offset.y) * element.height / element.clientHeight;
         return { x: x, y: y };
     }
 
@@ -724,7 +783,11 @@ class BoardContext {
     }
 
     display() {
-        const { mode } = this;
+        const { element, context: ctx, mode } = this;
+
+        ctx.fillStyle = "#f8f8f8";
+        ctx.fillRect(0, 0, element.width, element.height);
+
         switch (mode) {
             case ConfigValue.MODE_BIG_SHOW:
                 this.display_big_show();
@@ -936,11 +999,12 @@ class BoardContext {
         ctx.textBaseline = "middle";
 
         for (let i = 0; i < hint[0].length; i++) {
-            const l = hint[0][i].length;
+            const l = Math.max(hint[0][i].length, 1);
 
             for (let j = 0; j < l; j++) {
+                const value = hint[0][i].length ? hint[0][i][j] : 0;
                 ctx.fillText(
-                    hint[0][i][j],
+                    value,
                     0 | (mw - l + j + 0.5) * gap,
                     0 | (mh + i + 0.5) * gap
                 );
@@ -948,11 +1012,12 @@ class BoardContext {
         }
 
         for (let i = 0; i < hint[1].length; i++) {
-            const l = hint[1][i].length;
+            const l = Math.max(hint[1][i].length, 1);
 
             for (let j = 0; j < l; j++) {
+                const value = hint[1][i].length ? hint[1][i][j] : 0;
                 ctx.fillText(
-                    hint[1][i][j],
+                    value,
                     0 | (mw + i + 0.5) * gap,
                     0 | (mh - l + j + 0.5) * gap
                 );
@@ -992,7 +1057,7 @@ class BoardContext {
         const { width, height } = canvas_info;
 
         ctx.save();
-        
+
         let dw = 1, dh = 1;
         if (ConfigValue.isBig(mode)) {
             dw = small_width;
@@ -1015,10 +1080,10 @@ class BoardContext {
 
         let ssx = is_clicked ? sx : cx;
         let ssy = is_clicked ? sy : cy;
-        
+
         const lx = Math.min(cx, ssx), rx = Math.max(cx, ssx);
         const ly = Math.min(cy, ssy), ry = Math.max(cy, ssy);
-        
+
         if (cx >= 0) {
             this.fill_filter(
                 0 | (lx) * dw * gap,
@@ -1110,11 +1175,12 @@ class BoardContext {
 
         if (t == 0) t = 1;
         else if (t == 2) t = 2;
-        else t = 0;
+        else t = 3 - board.data[offset_y + sy][offset_x + sx];
+
         for (let i = ly; i <= ry; i++)
             for (let j = lx; j <= rx; j++)
                 board.data[i][j] = t;
-        
+
         this.resize_element();
         return false;
     }
@@ -1147,28 +1213,28 @@ class BoardContext {
             return true;
         if (!(0 <= cy && cy < small_height))
             return true;
-
-        const pre = this.input_data[cy][cx];
-        if (t == 0) t = 1;
-        else if (t == 2) t = 2;
-        else t = 0;
-        
-        if (t == 0)
-            return true;
         if (sx < mw || sy < mh)
             return true;
+
+        const ssx = sx - mw;
+        const ssy = sy - mh;
 
         const offset_x = small_x * small_width;
         const offset_y = small_y * small_height;
 
-        const ssx = sx - mw;
-        const ssy = sy - mh;
+        if (t == 0) t = 1;
+        else if (t == 2) t = 2;
+        else t = (input_data[ssy][ssx] != 1) ? 1 : 2;
 
         const value = t;
 
         const lx = Math.min(ssx, cx), rx = Math.max(ssx, cx);
         const ly = Math.min(ssy, cy), ry = Math.max(ssy, cy);
-        
+
+        this.change_stack.push(JSON.stringify([input_data, this.solve_cnt]));
+        if (this.change_stack.length > ConfigValue.CHANGE_STACK_LIMIT)
+            this.change_stack.shift();
+
         for (let i = ly; i <= ry; i++) {
             for (let j = lx; j <= rx; j++) {
                 if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
@@ -1178,6 +1244,8 @@ class BoardContext {
                     this.solve_cnt++;
             }
         }
+
+        console.log(this.solve_cnt);
 
         if (this.solve_cnt == small_width * small_height)
             this.solve_clear();
@@ -1196,7 +1264,7 @@ class BoardContext {
             dw = small_width;
             dw = small_height;
         }
-        
+
         if (!(0 <= cx && cx < width))
             return;
         if (!(0 <= cy && cy < height))
