@@ -655,33 +655,55 @@ class BoardContext {
     }
 
     init_canvas() {
-        const object = this;
         const { element } = this;
         this.context = element.getContext('2d');
 
-        // object.element.onclick = (e) => {
-        //     return this.click(e.offsetX, e.offsetY, 1);
-        // };
-        object.element.oncontextmenu = (e) => false;
+        element.oncontextmenu = (e) => false;
 
-        object.element.onmousedown = (e) => {
+        element.onmousedown = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info } = this;
+            const { gap, offset_x, offset_y } = canvas_info;
+
+            this.is_clicked = true;
+            this.sx = Math.floor((x - offset_x) / gap);
+            this.sy = Math.floor((y - offset_y) / gap);
+            return false;
+        };
+
+        element.onmousemove = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info, is_clicked } = this;
+            const { gap, offset_x, offset_y } = canvas_info;
+
+            if (!is_clicked) {
+                this.sx = Math.floor((x - offset_x) / gap);
+                this.sy = Math.floor((y - offset_y) / gap);
+            }
+
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
+            return this.move_mouse(cx, cy);
+        };
+
+        element.onmouseup = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info } = this;
+            const { gap, offset_x, offset_y } = canvas_info;
+
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
+
             this.is_clicked = false;
-            // TODO
-            return false;
+            return this.click(cx, cy, e.button);
         };
+    }
 
-        object.element.onmousemove = (e) => {
-            // return this.click(e.offsetX, e.offsetY, e.button);
-            return false;
-        };
-
-        object.element.onmouseup = (e) => {
-            return this.click(e.offsetX, e.offsetY, e.button);
-        };
-
-        object.element.addEventListener('mousemove', (e) => {
-            this.move_mouse(e.offsetX, e.offsetY);
-        });
+    transform_mouse_pos(e) {
+        const { element } = this;
+        const x = e.offsetX * element.width / element.clientWidth;
+        const y = e.offsetY * element.height / element.clientHeight;
+        return { x: x, y: y };
     }
 
     fit_ratio() {
@@ -956,7 +978,7 @@ class BoardContext {
     }
 
     display_filter() {
-        const { board, context: ctx, filter_board, cx, cy, mode, mw, mh, canvas_info } = this;
+        const { board, context: ctx, filter_board, sx, sy, cx, cy, mode, canvas_info } = this;
         const { small_width, small_height } = board;
         const { width, height } = canvas_info;
 
@@ -982,12 +1004,15 @@ class BoardContext {
             }
         }
 
+        const lx = Math.min(cx, sx), rx = Math.max(cx, sx);
+        const ly = Math.min(cy, sy), ry = Math.max(cy, sy);
+        
         if (cx >= 0) {
             this.fill_filter(
-                0 | (cx) * dw * gap,
-                0 | (cy) * dh * gap,
-                0 | dw * gap,
-                0 | dh * gap,
+                0 | (lx) * dw * gap,
+                0 | (ly) * dh * gap,
+                0 | (rx - lx + 1) * gap,
+                0 | (ry - ly + 1) * gap,
                 ConfigValue.FILTER_CURSOR
             );
 
@@ -1033,17 +1058,12 @@ class BoardContext {
         }
     }
 
-    click_big_edit(x, y, t) {
-        const { element, board, canvas_info } = this;
-        const {gap, offset_x, offset_y} = canvas_info;
-
-        x = x * (0 | element.width) / element.clientWidth;
-        y = y * (0 | element.height) / element.clientHeight;
-
+    click_big_edit(cx, cy, t) {
+        const { board } = this;
         const { large_width, large_height, small_width, small_height } = board;
 
-        const cx = Math.floor((x - offset_x) / (gap * small_width));
-        const cy = Math.floor((y - offset_y) / (gap * small_height));
+        cx = Math.floor(cx / small_width);
+        cy = Math.floor(cy / small_height);
 
         if (!(0 <= cx && cx < large_width))
             return true;
@@ -1055,44 +1075,42 @@ class BoardContext {
         return false;
     }
 
-    click_small_edit(x, y, t) {
-        const { element, board, canvas_info } = this;
-        const {gap, offset_x, offset_y} = canvas_info;
-
-        x = x * (0 | element.width) / element.clientWidth;
-        y = y * (0 | element.height) / element.clientHeight;
-
+    click_small_edit(cx, cy, t) {
+        const { board, small_x, small_y, sx, sy } = this;
         const { small_width, small_height } = board;
-        
-        const cx = Math.floor((x - offset_x) / (gap));
-        const cy = Math.floor((y - offset_y) / (gap));
+
+        cx = Math.floor(cx);
+        cy = Math.floor(cy);
 
         if (!(0 <= cx && cx < small_width))
             return true;
         if (!(0 <= cy && cy < small_height))
             return true;
 
-        const lx = 0 | Utility.get_parameter('x');
-        const ly = 0 | Utility.get_parameter('y');
-        const value = board.data[ly * small_height + cy][lx * small_width + cx];
-        board.data[ly * small_height + cy][lx * small_width + cx] = 3 - value;
+        const offset_x = small_x * small_width;
+        const offset_y = small_y * small_height;
+        const lx = offset_x + Math.min(sx, cx), rx = offset_x + Math.max(sx, cx);
+        const ly = offset_y + Math.min(sy, cy), ry = offset_y + Math.max(sy, cy);
 
-        this.change_stack.push([lx * small_width + cx, ly * small_height + cy]);
+        this.change_stack.push(JSON.stringify(board.data));
+
+        if (t == 0) t = 1;
+        else if (t == 2) t = 2;
+        else t = 0;
+        for (let i = ly; i <= ry; i++)
+            for (let j = lx; j <= rx; j++)
+                board.data[i][j] = t;
+        
         this.resize_element();
         return false;
     }
 
-    click_big_solve(x, y, t) {
-        const { element, board, canvas_info } = this;
+    click_big_solve(cx, cy, t) {
+        const { board } = this;
         const { large_width, large_height, small_width, small_height } = board;
-        const {gap, offset_x, offset_y} = canvas_info;
 
-        x = x * (0 | element.width) / element.clientWidth;
-        y = y * (0 | element.height) / element.clientHeight;
-
-        const cx = Math.floor((x - offset_x) / (gap * small_width));
-        const cy = Math.floor((y - offset_y) / (gap * small_height));
-        console.log(cx, cy, "<<<", canvas_info);
+        cx = Math.floor(cx / small_width);
+        cy = Math.floor(cy / small_height);
 
         if (!(0 <= cx && cx < large_width))
             return true;
@@ -1104,16 +1122,12 @@ class BoardContext {
         return false;
     }
 
-    click_small_solve(x, y, t) {
-        const { element, board, mw, mh, small_x, small_y, canvas_info } = this;
+    click_small_solve(cx, cy, t) {
+        const { board, small_x, small_y, mw, mh } = this;
         const { small_width, small_height } = board;
-        const { gap, offset_x, offset_y } = canvas_info;
 
-        x = x * (0 | element.width) / element.clientWidth;
-        y = y * (0 | element.height) / element.clientHeight;
-
-        const cx = Math.floor((x - offset_x) / (gap) - mw);
-        const cy = Math.floor((y - offset_y) / (gap) - mh);
+        cx = Math.floor(cx - mw);
+        cy = Math.floor(cy - mh);
 
         if (!(0 <= cx && cx < small_width))
             return true;
@@ -1139,49 +1153,33 @@ class BoardContext {
         return false;
     }
 
-    move_mouse(x, y) {
-        const { element, mode, board, mw, mh } = this;
-        const { width: c_width, height: c_height } = element;
-        const { large_width, large_height, small_width, small_height } = board;
+    move_mouse(cx, cy) {
+        const { board, mode, canvas_info } = this;
+        const { small_width, small_height } = board;
+        const { width, height } = canvas_info;
 
-        x = x * (0 | element.width) / element.clientWidth;
-        y = y * (0 | element.height) / element.clientHeight;
-
-        let width = 0, height = 0;
         let dw = 1, dh = 1;
-        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
-            width = small_width + mw;
-            height = small_height + mh;
-        } else if (ConfigValue.isBig(mode)) {
-            width = large_width * small_width;
-            height = large_height * small_height;
+        if (ConfigValue.isBig(mode)) {
             dw = small_width;
-            dh = small_height;
-        } else {
-            width = small_width;
-            height = small_height;
+            dw = small_height;
         }
-
-        const r = config['board_context_padding_ratio'];
-        const real_width = c_width * (1 - 2 * r);
-        const real_height = c_height * (1 - 2 * r);
-        const gap = Math.min(real_width / width, real_height / height);
-
-        const offset_x = r * c_width + (real_width - gap * width) / 2;
-        const offset_y = r * c_height + (real_height - gap * height) / 2;
-
-        const cx = Math.floor((x - offset_x) / (gap));
-        const cy = Math.floor((y - offset_y) / (gap));
-
+        
         if (!(0 <= cx && cx < width))
             return;
         if (!(0 <= cy && cy < height))
             return;
 
-        this.cx = 0 | cx / dw;
-        this.cy = 0 | cy / dh;
+        cx = Math.floor(cx / dw);
+        cy = Math.floor(cy / dh);
+
+        if (this.cx == cx && this.cy == cy)
+            return true;
+
+        this.cx = cx;
+        this.cy = cy;
 
         this.resize_element();
+        return false;
     }
 
     fill_tile(x, y, w, h, type) {
