@@ -617,7 +617,6 @@ class BoardContext {
     init() {
         this.init_canvas();
         this.init_resize();
-        this.canvas_info = new CanvasInfo(this);
     }
 
     get_element() {
@@ -647,6 +646,7 @@ class BoardContext {
 
         element.width = BoardContext.CANVAS_SIZE;
         element.height = BoardContext.CANVAS_SIZE;
+        this.canvas_info = new CanvasInfo(this);
 
         element.style.width = `${size}px`;
         element.style.height = `${size}px`;
@@ -684,21 +684,11 @@ class BoardContext {
         });
     }
 
-    fit_ratio(width, height) {
-        const { element, context: ctx } = this;
-        let { width: c_width, height: c_height } = element;
-        const ratio = config['board_context_padding_ratio'];
+    fit_ratio() {
+        const { context: ctx, canvas_info } = this;
+        const { offset_x, offset_y, gap } = canvas_info;
 
-        ctx.translate(c_width * ratio, c_height * ratio);
-
-        c_width *= (1 - 2 * ratio);
-        c_height *= (1 - 2 * ratio);
-
-        const gap = Math.min(c_width / width, c_height / height);
-        const offset_x = (c_width - gap * width) / 2;
-        const offset_y = (c_height - gap * height) / 2;
-
-        ctx.translate(offset_x, offset_y);;
+        ctx.translate(offset_x, offset_y);
         return gap;
     }
 
@@ -730,11 +720,9 @@ class BoardContext {
     }
 
     display_big_show() {
-        const { element, context: ctx, board } = this;
-
+        const { context: ctx, board, canvas_info } = this;
         const { large_width, large_height, small_width, small_height } = board;
-        const width = large_width * small_width;
-        const height = large_height * small_height;
+        const { width, height } = canvas_info;
 
         ctx.save();
         ctx.fillStyle = "#aaaaaa";
@@ -775,16 +763,15 @@ class BoardContext {
     }
 
     display_small_show() {
-        const { element, context: ctx, board, small_x: x, small_y: y } = this;
+        const { element, context: ctx, board, small_x: x, small_y: y, canvas_info } = this;
         const { large_width, large_height, small_width, small_height } = board;
+        const { width, height } = canvas_info;
 
         ctx.save();
         ctx.fillStyle = "#aaaaaa";
         ctx.strokeStyle = "#333333";
         ctx.lineWidth = 1;
 
-        const width = small_width;
-        const height = small_height;
         const gap = this.fit_ratio(width, height);
 
         for (let i = 0; i < small_height; i++) {
@@ -835,11 +822,9 @@ class BoardContext {
     display_big_solve() {
         this.display_big_show();
 
-        const { element, context: ctx, board, solve_data, show_answer } = this;
-
+        const { element, context: ctx, board, solve_data, show_answer, canvas_info } = this;
         const { large_width, large_height, small_width, small_height } = board;
-        const width = large_width * small_width;
-        const height = large_height * small_height;
+        const { width, height } = canvas_info;
 
         ctx.save();
         ctx.fillStyle = "#aaaaaa";
@@ -891,16 +876,15 @@ class BoardContext {
     }
 
     display_small_solve() {
-        const { context: ctx, board, small_x: x, small_y: y, mw, mh, hint, input_data } = this;
+        const { context: ctx, board, mw, mh, hint, input_data, canvas_info } = this;
         const { small_width, small_height } = board;
+        const { width, height } = canvas_info;
 
         ctx.save();
         ctx.fillStyle = "#aaaaaa";
         ctx.strokeStyle = "#333333";
         ctx.lineWidth = 1;
 
-        const width = small_width + mw;
-        const height = small_height + mh;
         const gap = this.fit_ratio(width, height);
 
         for (let i = 0; i < small_height; i++) {
@@ -972,24 +956,16 @@ class BoardContext {
     }
 
     display_filter() {
-        const { element, board, context: ctx, filter_board, cx, cy, mode, mw, mh } = this;
-        const { large_width, large_height, small_width, small_height } = board;
+        const { board, context: ctx, filter_board, cx, cy, mode, mw, mh, canvas_info } = this;
+        const { small_width, small_height } = board;
+        const { width, height } = canvas_info;
 
         ctx.save();
-
-        let width = 0, height = 0;
+        
         let dw = 1, dh = 1;
-        if (mode == ConfigValue.MODE_SMALL_SOLVE) {
-            width = small_width + mw;
-            height = small_height + mh;
-        } else if (ConfigValue.isBig(mode)) {
-            width = large_width * small_width;
-            height = large_height * small_height;
+        if (ConfigValue.isBig(mode)) {
             dw = small_width;
             dh = small_height;
-        } else {
-            width = small_width;
-            height = small_height;
         }
 
         const gap = this.fit_ratio(width, height);
