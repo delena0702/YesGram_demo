@@ -643,8 +643,10 @@ class BoardContext {
 
     resize_element() {
         const element = this.get_element();
+        element.classList.add('w-100');
         const max_size = 0 | document.documentElement.clientHeight * config.board_max_height_ratio;
         const size = Math.min(element.parentElement.clientWidth, max_size);
+        element.classList.remove('w-100');
 
         element.width = BoardContext.CANVAS_SIZE;
         element.height = BoardContext.CANVAS_SIZE;
