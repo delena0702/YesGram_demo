@@ -20,7 +20,8 @@ function create_element() {
             const text = `${method} 필터를 적용한 이미지를 선택하시겠습니까?`;
             document.querySelector("#modal-confirm > div > div > div.modal-body").textContent = text;
             document.querySelector("#button-submit").onclick = (e)=>{
-                board.title = document.querySelector("#input-title").value.trim();
+                if (document.querySelector("#input-title").value.trim())
+                    board.title = document.querySelector("#input-title").value.trim();
                 save_puzzle(board);
             };
         });
