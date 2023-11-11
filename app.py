@@ -1,4 +1,6 @@
-from flask import Flask, request, render_template
+import json
+import cv2
+from flask import Flask, jsonify, request, render_template
 from werkzeug.utils import secure_filename
 import os
 
@@ -60,7 +62,7 @@ def uploadImageResult():
     
     # 처리된 이미지 전달
     return render_template('generate_image2.html',
-                           image_data=segmented_image,
+                           image_data = json.dumps(segmented_image),
                            large_width = large_width,
                            small_width = small_width,
                            large_height = large_height,
@@ -125,7 +127,7 @@ def solveBig():
 
 
 @app.route('/solve/small', methods=['GET'])
-def sloveSmall():
+def solveSmall():
     pid = request.args.get('pid')
     if(pid is None):
         return render_template('404.html')
@@ -138,6 +140,43 @@ def sloveSmall():
     if(y is None):
         return render_template('404.html')
     return render_template('solve_small.html')
+
+@app.route('/demo', methods=['GET'])
+def demo():
+    return render_template('demo.html')
+
+@app.route('/demo/upload', methods=['POST'])
+def demoUpload():
+    MAX_SIZE = 100
+    
+    # 파일 이름: <image>를 요청함 - 변수 이름
+    img = request.files['image']
+    
+    #이미지 파일 없음
+    if not img:
+        return render_template('404.html')
+    
+    # 이미지 확장자 불일치
+    if not allowed_file(img.filename):
+        return render_template('404.html')
+
+    img_name = secure_filename(img.filename)
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], img_name)
+    img.save(img_path)
+    
+    src = cv2.imread(img_path, cv2.IMREAD_COLOR)
+    height = src.shape[0]
+    width = src.shape[1]
+    
+    ratio = MAX_SIZE / max(width, height)
+    width = int(width * ratio)
+    height = int(height * ratio)
+    
+    # 이미지 처리 결과
+    segmented_image = kmean.ImageProcessor(img_path, width, height)
+    
+    # 처리된 이미지 전달
+    return jsonify(segmented_image)
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=80) 

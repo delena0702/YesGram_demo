@@ -1,7 +1,5 @@
 import cv2
 import numpy as np
-import json
-
 
 class ImagePreprocessing:
     def __init__(self, src) -> None:
@@ -153,7 +151,7 @@ def ImageProcessor(src, width, height):
     src = cv2.imread(src, cv2.IMREAD_COLOR)
     if src is None:
         print("Image load failed!")
-        return json.dumps({})
+        return {}
     
     # Gray Scale
     gray = cv2.cvtColor(src, cv2.COLOR_RGB2GRAY)
@@ -184,7 +182,7 @@ def ImageProcessor(src, width, height):
             }
         }
 
-    return json.dumps(json_obj)
+    return json_obj
 
 
 if __name__ == '__main__':

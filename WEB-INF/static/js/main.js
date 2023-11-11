@@ -160,7 +160,7 @@ class Board {
         }
     }
 
-    static import_by_image(large_width, large_height, small_width, small_height, image_data) {
+    static import_by_image(large_width, large_height, small_width, small_height, image_data, demo) {
         const board = new Board(large_width, large_height, small_width, small_height);
         board.data = image_data.map(x =>
             x.map(x =>
@@ -177,7 +177,8 @@ class Board {
                     )
                 );
 
-                solver.make_solvable_puzzle();
+                if (!demo)
+                    solver.make_solvable_puzzle();
 
                 for (let y = 0; y < small_height; y++) {
                     for (let x = 0; x < small_width; x++) {
