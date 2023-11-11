@@ -1427,8 +1427,13 @@ class LocalStorageManager {
 
 class Utility {
     static copy_to_clipboard(element) {
-        const textarea = element;
-        navigator.clipboard.writeText(textarea.value);
+        element.disabled = false;
+        element.select();
+        if (navigator.clipboard)
+            navigator.clipboard.writeText(element.value);
+        else
+            document.execCommand('copy');
+        element.disabled = true;
     }
 
     static get_parameter(key) {

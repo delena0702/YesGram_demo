@@ -11,9 +11,9 @@ function init() {
     }));
 
     // Copy Button
-    document.getElementById('button-copy').addEventListener('click', ()=>{
+    document.getElementById('button-copy').onclick = ()=>{
         Utility.copy_to_clipboard(document.getElementById('output-puzzle-code'));
-    });
+    };
     
     const pid = 0 | (Utility.get_parameter('pid') ?? -1);
     let board = LocalStorageManager.get_board(pid);
