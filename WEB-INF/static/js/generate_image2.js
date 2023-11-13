@@ -1,11 +1,8 @@
 function init() {
-    console.log(image_data);
-    console.log(large_width, large_height, small_width, small_height);
-
     create_element();
 }
 
-function create_element() {
+async function create_element() {
     const base_node = document.querySelector("#card-image");
     const container = base_node.parentElement;
     container.removeChild(base_node);
@@ -13,7 +10,8 @@ function create_element() {
     for (const method in image_data) {
         const description = image_data[method]['desc'];
         const image = image_data[method]['data'];
-        const board = Board.import_by_image(large_width, large_height, small_width, small_height, image);
+        const board = await Board.import_by_image(large_width, large_height, small_width, small_height, image);
+        console.log(board);
         const node = base_node.cloneNode(true);
 
         node.querySelector("#button-select").addEventListener('click', () => {
@@ -41,6 +39,7 @@ function create_element() {
 function save_puzzle(board) {
     const pid = LocalStorageManager.get_empty_puzzle_id();
     LocalStorageManager.set_board(pid, board);
+    alert("퍼즐을 저장하였습니다. 수정 페이지로 이동합니다.");
     location.href = `/edit/big?pid=${pid}`;
 }
 

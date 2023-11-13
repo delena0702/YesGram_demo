@@ -27,6 +27,9 @@ function list_all() {
         node.querySelector("#list-column > div > div > div > div > div > a:nth-child(2)").href = `/edit/big?pid=${puzzle_id}`;
         node.querySelector("#list-column > div > div > div > div > div > a:nth-child(3)").addEventListener('click', (e) => {
             e.stopPropagation();
+            
+            if (!confirm("퍼즐을 삭제하시겠습니까??"))
+                return;
             LocalStorageManager.set_board(puzzle_id, null);
             location.href = "/list";
         });
@@ -35,7 +38,6 @@ function list_all() {
         const canvas = node.querySelector("#list-column > div > div > canvas");
 
         check.addEventListener('click', (e) => {
-            console.log(e.target.checked);
             draw_board(canvas, puzzle, solve_data, e.target.checked);
             e.stopPropagation();
         });

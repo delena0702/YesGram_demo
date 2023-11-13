@@ -36,7 +36,7 @@
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <ul class="navbar-nav me-auto mb-2 mb-md-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="/generate/select">Generate Puzzle</a>
+                            <a class="nav-link active" href="/generate/select">Generate Puzzle</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/list">Puzzle List</a>
@@ -51,14 +51,14 @@
     </header>
 
     <main class="mt-5">
-        <section class="py-5 text-center container">
+        <section class="py-5 container">
             <div class="row py-lg-5">
                 <form class="col-12" action="/generate/image/result" method="post" enctype="multipart/form-data">
                     <div class="mx-auto">
-                        <h1 class="fw-light">이미지 파일로 퍼즐 생성하기</h1>
+                        <h1 class="fw-light text-center">이미지 파일로 퍼즐 생성하기</h1>
                     </div>
 
-                    <h2 class="fw-light mt-5">Step 1. 이미지 선택하기</h2>
+                    <h2 class="fw-light mt-5 text-center">Step 1. 이미지 선택하기</h2>
                     <div class="my-3">
                         <input type="file" class="form-control form-control-lg" aria-label="Large file input example"
                             accept="image/*" name="image" onchange="fileCheck(this);">
@@ -75,7 +75,7 @@
 
                     <h2 class="mt-5 text-center fw-light">Step 2. 퍼즐 크기 설정하기 </h2>
                     <h4 class="mt-5 fw-light">실제 퍼즐 크기</h4>
-                    <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할 지 결정 합니다.</h5>
+                    <h5 class="fw-light">한 퍼즐을 몇 개의 칸으로 분할할지 결정합니다.</h5>
                     <div class="mt-4 bd-example m-0 border-0">
                         <div class="row g-3">
                             <div class="col-md-2"></div>
@@ -94,7 +94,7 @@
                         </div>
                     </div>
                     <h4 class="mt-5 fw-light">이미지 분할 크기</h4>
-                    <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할 지 결정합니다.</h5>
+                    <h5 class="fw-light">한 이미지를 몇 개의 퍼즐로 분할할지 결정합니다.</h5>
                     <div class="mt-4 bd-example m-0 border-0">
                         <div class="row g-3">
                             <div class="col-md-2"></div>
@@ -102,13 +102,13 @@
                                 <label for="input-large-width" class="form-label">가로 칸 개수 <span class="lead fs-6">(1 ~
                                         20)</span></label>
                                 <input type="number" name="large-width" class="form-control" id="input-large-width"
-                                    min="1" max="20" step="1" value="1" required="">
+                                    min="1" max="20" step="1" value="10" required="">
                             </div>
                             <div class="col-md-4">
                                 <label for="input-large-height" class="form-label">세로 칸 개수 <span class="lead fs-6">(1 ~
                                         20)</span></label>
                                 <input type="number" name="large-height" class="form-control" id="input-large-height"
-                                    min="1" max="20" step="1" value="1" required="">
+                                    min="1" max="20" step="1" value="10" required="">
                             </div>
                         </div>
                     </div>
@@ -134,12 +134,11 @@
                     <h5>Team Members</h5>
                     <ul class="nav flex-column">
                         <li class="nav-item mb-2"><a href="https://github.com/3daysJin"
-                                class="nav-link p-0 text-body-secondary">Lee
-                                SeungJin(@3daysJin)</a></li>
+                                class="nav-link p-0 text-body-secondary">Lee SeungJin (@3daysJin)</a></li>
                         <li class="nav-item mb-2"><a href="https://github.com/delena0702"
-                                class="nav-link p-0 text-body-secondary">Lee SeungYeop(@delena0702)</a></li>
+                                class="nav-link p-0 text-body-secondary">Lee SeungYeop (@delena0702)</a></li>
                         <li class="nav-item mb-2"><a href="https://github.com/XsQuare01"
-                                class="nav-link p-0 text-body-secondary">Mun ByoungHwa(@XsQuare01)</a></li>
+                                class="nav-link p-0 text-body-secondary">Mun ByoungHwa (@XsQuare01)</a></li>
                     </ul>
                 </div>
                 <div class="col mb-3">

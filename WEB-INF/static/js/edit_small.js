@@ -1,27 +1,36 @@
 var board_context = null;
 
 function init() {
-    const pid = 0 | Utility.get_parameter('pid');
-    const board = LocalStorageManager.get_board(pid);
-    const small_x = 0 | Utility.get_parameter('x');
-    const small_y = 0 | Utility.get_parameter('y');
-    board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT, {
-        small_x: small_x,
-        small_y: small_y,
-    });
+    try {
+        const pid = 0 | Utility.get_parameter('pid');
+        const board = LocalStorageManager.get_board(pid);
+        const small_x = parseInt(Utility.get_parameter('x'));
+        const small_y = parseInt(Utility.get_parameter('y'));
 
-    document.getElementById('button-undo').addEventListener('click', undo);
-    document.getElementById('button-reset').addEventListener('click', reset);
-    document.getElementById('button-check').addEventListener('click', check);
-    document.getElementById('button-save').addEventListener('click', save);
-    document.getElementById('button-return').addEventListener('click', return_page);
+        board_context = new BoardContext('img-board', board, ConfigValue.MODE_SMALL_EDIT, {
+            small_x: small_x,
+            small_y: small_y,
+        });
+
+        document.getElementById('button-undo').addEventListener('click', undo);
+        document.getElementById('button-reset').addEventListener('click', reset);
+        document.getElementById('button-check').addEventListener('click', check);
+        document.getElementById('button-save').addEventListener('click', save);
+        document.getElementById('button-return').addEventListener('click', return_page);
+    } catch (e) {
+        alert("존재하지 않는 퍼즐입니다.");
+        history.back();
+    }
 }
 
 function undo() {
     const change = board_context.get_last_change();
 
-    if (change == null)
+    if (board == null) {
+        alert("존재하지 않는 퍼즐입니다.");
+        history.back();
         return;
+    }
 
     board_context.board.data = JSON.parse(change);
     board_context.resize_element();

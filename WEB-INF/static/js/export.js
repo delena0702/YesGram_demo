@@ -11,12 +11,19 @@ function init() {
     }));
 
     // Copy Button
-    document.getElementById('button-copy').addEventListener('click', ()=>{
+    document.getElementById('button-copy').onclick = ()=>{
         Utility.copy_to_clipboard(document.getElementById('output-puzzle-code'));
-    });
+    };
     
     const pid = 0 | (Utility.get_parameter('pid') ?? -1);
     let board = LocalStorageManager.get_board(pid);
+    
+    if (board == null) {
+        alert("존재하지 않는 퍼즐입니다.");
+        history.back();
+        return;
+    }
+
     const img_board = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SHOW);
 
     const output = document.getElementById('output-puzzle-code');
