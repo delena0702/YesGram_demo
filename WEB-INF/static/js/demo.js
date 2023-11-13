@@ -5,6 +5,8 @@ function init() {
 class DemoSimulator {
     state
     image_data
+    solver
+    board
 
     constructor() {
         this.state = 0;
@@ -34,7 +36,7 @@ class DemoSimulator {
         fetch('/demo/upload', {
             method: "POST",
             body: form_data
-        }).then((res) => 
+        }).then((res) =>
             res.json()
         ).then((image_data) => {
             this.image_data = image_data;
@@ -55,7 +57,6 @@ class DemoSimulator {
         container.removeChild(element);
         base.id = '';
 
-        console.log(image_data);
         for (const key in image_data) {
             const node = base.cloneNode(true);
             const { data, desc } = image_data[key];
@@ -70,8 +71,200 @@ class DemoSimulator {
             draw_board(canvas, puzzle);
             node.querySelector('#card-canvas').id = '';
 
+            node.querySelector('#button-select-binary-image').onclick = () => {
+                this.board = new PuzzleBoard(puzzle.small_width, puzzle.small_height);
+                this.board.board = puzzle.data;
+                this.select_binary_image();
+            };
+            node.querySelector('#button-select-binary-image').id = '';
+
             container.appendChild(node);
         }
+    }
+
+    select_binary_image() {
+        const { board } = this;
+        this.next();
+
+        this.ctx = document.getElementById('canvas-make-puzzle').getContext('2d');
+        const solver = new Solver(board.width, board.height);
+        this.solver = solver;
+
+        solver.board = board;
+        solver.attach_hint(Solver.make_hint_from_array(board.board));
+        solver.board.change_listener = async (change_data) => {
+            this.draw_change_solve(change_data);
+            await Utility.delay(100);
+        };
+
+        solver.board.clear_board();
+        solver.solve();
+    }
+
+    draw_change_solve(change_data) {
+        const ratio = 0.01;
+        const { min, max } = Math;
+
+        const { solver, ctx } = this;
+        const { board } = solver;
+        let { width: canvas_width, height: canvas_height } = ctx.canvas;
+        const { width, height, hint, board: arr } = board;
+        const [hint_width, hint_height] = Array.from({ length: 2 }, (_, i) =>
+            max(hint[i].map(x => x.length), 1)
+        );
+        const [real_width, real_height] = [width + hint_width, height + hint_height];
+
+        ctx.save();
+        console.log(ctx, JSON.parse(JSON.stringify(change_data)));
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas_width, canvas_height);
+
+        ctx.translate(canvas_width * ratio, canvas_height * ratio);
+        canvas_width = canvas_width * (1 - 2 * ratio);
+        canvas_height = canvas_height * (1 - 2 * ratio);
+
+        const gap = min(canvas_width / real_width, canvas_height / real_height);
+        ctx.translate(
+            (canvas_width - gap * real_width) / 2,
+            (canvas_height - gap * real_height) / 2,
+        );
+        canvas_width = gap * real_width;
+        canvas_height = gap * real_height;
+
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `${0 | gap * 0.6}px consolas`;
+
+        for (let i = 0; i < height; i++) {
+            let h = hint[0][i];
+            if (h.length == 0)
+                h = [0];
+
+            for (let j = 0; j < h.length; j++) {
+                ctx.fillText(
+                    h[j],
+                    (hint_width - h.length + j + 0.5) * gap,
+                    (hint_height + i + 0.5) * gap
+                );
+            }
+        }
+
+        for (let i = 0; i < width; i++) {
+            let h = hint[1][i];
+            if (h.length == 0)
+                h = [0];
+
+            for (let j = 0; j < h.length; j++) {
+                ctx.fillText(
+                    h[j],
+                    (hint_width + i + 0.5) * gap,
+                    (hint_height - h.length + j + 0.5) * gap
+                );
+            }
+        }
+
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                ctx.save();
+                ctx.translate((hint_width + j) * gap, (hint_height + i) * gap);
+                this.draw_tile(arr[i][j], gap);
+                ctx.restore();
+            }
+        }
+
+        ctx.strokeStyle = "#000000";
+        for (let i = hint_height; i <= real_height; i++) {
+            ctx.beginPath();
+            ctx.moveTo((0) * real_width * gap, (i) * gap);
+            ctx.lineTo((1) * real_width * gap, (i) * gap);
+            ctx.stroke();
+        }
+
+        for (let j = hint_width; j <= real_width; j++) {
+            ctx.beginPath();
+            ctx.moveTo((j) * gap, (0) * real_height * gap);
+            ctx.lineTo((j) * gap, (1) * real_height * gap);
+            ctx.stroke();
+        }
+
+        if (!change_data) {
+            ctx.restore();
+            return;
+        }
+
+        const [now, data] = change_data;
+        const queue = [now, ...data];
+
+        for (let i = queue.length - 1; i >= 0; i--) {
+            const line = queue[i];
+            if (i)
+                ctx.fillStyle = "#ffff0044";
+            else
+                ctx.fillStyle = "#00ff0044";
+
+            if (line < height) {
+                ctx.fillRect(
+                    (0) * gap,
+                    (hint_height + line) * gap,
+                    (real_width) * gap,
+                    (1) * gap
+                );
+            }
+            else {
+                ctx.fillRect(
+                    (hint_width + line - height) * gap,
+                    (0) * gap,
+                    (1) * gap,
+                    (real_height) * gap
+                );
+            }
+        }
+
+        ctx.restore();
+    }
+
+    draw_tile(tile, size) {
+        const { ctx } = this;
+
+        ctx.save();
+
+        switch(tile) {
+            case 0:
+                break;
+
+            case 1:
+                ctx.fillStyle = `#444444`;
+                ctx.fillRect(0, 0, size, size);
+                break;
+
+            case 2:
+                ctx.strokeStyle = `#aaaaaa`;
+                ctx.lineWidth = 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(0 * size, 0 * size);
+                ctx.lineTo(1 * size, 1 * size);
+                ctx.moveTo(1 * size, 0 * size);
+                ctx.lineTo(0 * size, 1 * size);
+                ctx.stroke();
+                break;
+
+            case 3:
+                ctx.fillStyle = `#abcdef`;
+                ctx.fillRect(0, 0, size, size);
+                ctx.fillStyle = `#000000`;
+                ctx.fillText("?", size / 2, size / 2);
+                break;
+
+            case -1:
+                ctx.fillStyle = `#ff0000`;
+                ctx.fillRect(0, 0, size, size);
+                break;
+        }
+
+        ctx.restore();
     }
 }
 

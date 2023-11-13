@@ -1,11 +1,8 @@
 function init() {
-    console.log(image_data);
-    console.log(large_width, large_height, small_width, small_height);
-
     create_element();
 }
 
-function create_element() {
+async function create_element() {
     const base_node = document.querySelector("#card-image");
     const container = base_node.parentElement;
     container.removeChild(base_node);
@@ -13,7 +10,7 @@ function create_element() {
     for (const method in image_data) {
         const description = image_data[method]['desc'];
         const image = image_data[method]['data'];
-        const board = Board.import_by_image(large_width, large_height, small_width, small_height, image);
+        const board = await Board.import_by_image(large_width, large_height, small_width, small_height, image);
         const node = base_node.cloneNode(true);
 
         node.querySelector("#button-select").addEventListener('click', () => {

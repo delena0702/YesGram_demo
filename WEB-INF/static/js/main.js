@@ -160,7 +160,7 @@ class Board {
         }
     }
 
-    static import_by_image(large_width, large_height, small_width, small_height, image_data, demo) {
+    static async import_by_image(large_width, large_height, small_width, small_height, image_data, demo) {
         const board = new Board(large_width, large_height, small_width, small_height);
         board.data = image_data.map(x =>
             x.map(x =>
@@ -178,7 +178,7 @@ class Board {
                 );
 
                 if (!demo)
-                    solver.make_solvable_puzzle();
+                    await solver.make_solvable_puzzle();
 
                 for (let y = 0; y < small_height; y++) {
                     for (let x = 0; x < small_width; x++) {
@@ -204,14 +204,14 @@ class Solver {
         board.attach_hint(hint)
     }
 
-    solve() {
+    async solve() {
         const { board } = this
-        board.solve()
+        await board.solve()
     }
 
-    make_solvable_puzzle() {
+    async make_solvable_puzzle() {
         const { board } = this
-        board.make_solvable_puzzle();
+        await board.make_solvable_puzzle();
     }
 
     get_result() {
@@ -392,7 +392,7 @@ class PuzzleBoard {
         return retval;
     }
 
-    solve() {
+    async solve() {
         const { width: M, height: N, board, hint, change_listener: change } = this;
 
         const queue = Array.from({ length: N + M }, (_, i) => i);
@@ -406,7 +406,7 @@ class PuzzleBoard {
                 const arr = Array.from({ length: M }, (_, j) => board[i][j]);
                 const result = this.solve_line(hint[0][i], arr);
 
-                change([idx, queue]);
+                await change([idx, queue]);
 
                 for (let j = 0; j < M; j++) {
                     if (result[j] == -1) {
@@ -417,7 +417,7 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[j];
-                    change([idx, queue]);
+                    await change([idx, queue]);
 
                     if (!in_queue[N + j]) {
                         queue.push(N + j);
@@ -440,7 +440,7 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[i];
-                    change([idx, queue]);
+                    await change([idx, queue]);
 
                     if (!in_queue[i]) {
                         queue.push(i);
@@ -451,7 +451,7 @@ class PuzzleBoard {
         }
     }
 
-    make_solvable_puzzle() {
+    async make_solvable_puzzle() {
         const { width: M, height: N, board, change_listener: change } = this;
 
         const pre = board.map(x => x.map(x => x));
@@ -461,7 +461,7 @@ class PuzzleBoard {
         this.clear_board();
 
         while (true) {
-            this.solve();
+            await this.solve();
 
             const unsolved_cnt = board.reduce((a, x) =>
                 a + x.reduce((a, x) =>
@@ -505,7 +505,7 @@ class PuzzleBoard {
         hint = Solver.make_hint_from_array(pre);
         this.attach_hint(hint);
         this.clear_board();
-        this.solve();
+        await this.solve();
 
         if (JSON.stringify(pre) != JSON.stringify(board)) {
             this.board = pre;
