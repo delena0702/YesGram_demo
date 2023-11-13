@@ -721,108 +721,104 @@ class BoardContext {
         const { element } = this;
         this.context = element.getContext('2d');
 
-        const is_touch = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+        // const is_touch = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
 
-        if (is_touch) {
-            // Touch Device
+        // Touch Device
 
-            element.ontouchstart = (e) => {
-                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
-                const { canvas_info } = this;
-                const { width, height, gap, offset_x, offset_y } = canvas_info;
+        element.ontouchstart = (e) => {
+            const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+            const { canvas_info } = this;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
 
-                this.is_clicked = true;
+            this.is_clicked = true;
+            this.sx = Math.floor((x - offset_x) / gap);
+            this.sy = Math.floor((y - offset_y) / gap);
+
+            this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+            this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+
+            if (e.touches.length >= 2)
+                return true;
+            return false;
+        };
+
+        element.ontouchmove = (e) => {
+            const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+            const { canvas_info, is_clicked } = this;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
+
+            if (!is_clicked) {
                 this.sx = Math.floor((x - offset_x) / gap);
                 this.sy = Math.floor((y - offset_y) / gap);
 
                 this.sx = Math.max(Math.min(this.sx, width - 1), 0);
                 this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+            }
 
-                if (e.touches.length >= 2)
-                    return true;
-                return false;
-            };
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
+            return this.move_mouse(cx, cy);
+        };
 
-            element.ontouchmove = (e) => {
-                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
-                const { canvas_info, is_clicked } = this;
-                const { width, height, gap, offset_x, offset_y } = canvas_info;
+        element.ontouchend = (e) => {
+            const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
+            const { canvas_info } = this;
+            const { gap, offset_x, offset_y } = canvas_info;
 
-                if (!is_clicked) {
-                    this.sx = Math.floor((x - offset_x) / gap);
-                    this.sy = Math.floor((y - offset_y) / gap);
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
 
-                    this.sx = Math.max(Math.min(this.sx, width - 1), 0);
-                    this.sy = Math.max(Math.min(this.sy, height - 1), 0);
-                }
+            this.is_clicked = false;
+            return this.click(cx, cy, -1);
+        };
 
-                const cx = (x - offset_x) / gap;
-                const cy = (y - offset_y) / gap;
-                return this.move_mouse(cx, cy);
-            };
+        // Mouse Device
+        element.oncontextmenu = () => false;
 
-            element.ontouchend = (e) => {
-                const { x, y } = this.transform_mouse_pos(e.changedTouches[0]);
-                const { canvas_info } = this;
-                const { gap, offset_x, offset_y } = canvas_info;
+        element.onmousedown = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info } = this;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
 
-                const cx = (x - offset_x) / gap;
-                const cy = (y - offset_y) / gap;
+            this.is_clicked = true;
+            this.sx = Math.floor((x - offset_x) / gap);
+            this.sy = Math.floor((y - offset_y) / gap);
 
-                this.is_clicked = false;
-                return this.click(cx, cy, -1);
-            };
-        }
+            this.sx = Math.max(Math.min(this.sx, width - 1), 0);
+            this.sy = Math.max(Math.min(this.sy, height - 1), 0);
 
-        else {
-            // Mouse Device
-            element.oncontextmenu = () => false;
+            return false;
+        };
 
-            element.onmousedown = (e) => {
-                const { x, y } = this.transform_mouse_pos(e);
-                const { canvas_info } = this;
-                const { width, height, gap, offset_x, offset_y } = canvas_info;
+        element.onmousemove = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info, is_clicked } = this;
+            const { width, height, gap, offset_x, offset_y } = canvas_info;
 
-                this.is_clicked = true;
+            if (!is_clicked) {
                 this.sx = Math.floor((x - offset_x) / gap);
                 this.sy = Math.floor((y - offset_y) / gap);
 
                 this.sx = Math.max(Math.min(this.sx, width - 1), 0);
                 this.sy = Math.max(Math.min(this.sy, height - 1), 0);
+            }
 
-                return false;
-            };
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
+            return this.move_mouse(cx, cy);
+        };
 
-            element.onmousemove = (e) => {
-                const { x, y } = this.transform_mouse_pos(e);
-                const { canvas_info, is_clicked } = this;
-                const { width, height, gap, offset_x, offset_y } = canvas_info;
+        element.onmouseup = (e) => {
+            const { x, y } = this.transform_mouse_pos(e);
+            const { canvas_info } = this;
+            const { gap, offset_x, offset_y } = canvas_info;
 
-                if (!is_clicked) {
-                    this.sx = Math.floor((x - offset_x) / gap);
-                    this.sy = Math.floor((y - offset_y) / gap);
+            const cx = (x - offset_x) / gap;
+            const cy = (y - offset_y) / gap;
 
-                    this.sx = Math.max(Math.min(this.sx, width - 1), 0);
-                    this.sy = Math.max(Math.min(this.sy, height - 1), 0);
-                }
-
-                const cx = (x - offset_x) / gap;
-                const cy = (y - offset_y) / gap;
-                return this.move_mouse(cx, cy);
-            };
-
-            element.onmouseup = (e) => {
-                const { x, y } = this.transform_mouse_pos(e);
-                const { canvas_info } = this;
-                const { gap, offset_x, offset_y } = canvas_info;
-
-                const cx = (x - offset_x) / gap;
-                const cy = (y - offset_y) / gap;
-
-                this.is_clicked = false;
-                return this.click(cx, cy, e.button);
-            };
-        }
+            this.is_clicked = false;
+            return this.click(cx, cy, e.button);
+        };
     }
 
     transform_mouse_pos(e) {
