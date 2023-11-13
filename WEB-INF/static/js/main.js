@@ -392,11 +392,19 @@ class PuzzleBoard {
         return retval;
     }
 
-    async solve() {
+    async solve(init_queue, skip_cnt) {
         const { width: M, height: N, board, hint, change_listener: change } = this;
 
-        const queue = Array.from({ length: N + M }, (_, i) => i);
-        const in_queue = new Array(N + M).fill(true);
+        const queue = init_queue ?? Array.from({ length: N + M }, (_, i) => i);
+        const in_queue = Array.from({length: N + M}, (_, i) => queue.includes(i));
+        skip_cnt = skip_cnt ?? 0;
+
+        if (init_queue) {
+            await change([queue[0], queue.slice(1)]);
+        }
+
+        let skip_idx = 0;
+
         while (queue.length) {
             const idx = queue.shift()
             in_queue[idx] = false;
@@ -406,8 +414,7 @@ class PuzzleBoard {
                 const arr = Array.from({ length: M }, (_, j) => board[i][j]);
                 const result = this.solve_line(hint[0][i], arr);
 
-                await change([idx, queue]);
-
+                let is_change = false;
                 for (let j = 0; j < M; j++) {
                     if (result[j] == -1) {
                         board[i][j] = -1;
@@ -417,12 +424,17 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[j];
-                    await change([idx, queue]);
+                    is_change = true;
 
                     if (!in_queue[N + j]) {
                         queue.push(N + j);
                         in_queue[N + j] = true;
                     }
+                }
+            
+                if (is_change && (++skip_idx > skip_cnt)) {
+                    await change([idx, queue]);
+                    skip_idx = 0;
                 }
             }
 
@@ -431,6 +443,7 @@ class PuzzleBoard {
                 const arr = Array.from({ length: N }, (_, i) => board[i][j]);
                 const result = this.solve_line(hint[1][j], arr);
 
+                let is_change = false;
                 for (let i = 0; i < N; i++) {
                     if (result[i] == -1) {
                         board[i][j] = -1;
@@ -440,29 +453,42 @@ class PuzzleBoard {
                         continue;
 
                     board[i][j] = result[i];
-                    await change([idx, queue]);
+                    is_change = true;
 
                     if (!in_queue[i]) {
                         queue.push(i);
                         in_queue[i] = true;
                     }
                 }
+            
+                if (is_change && (++skip_idx > skip_cnt)) {
+                    await change([idx, queue]);
+                    skip_idx = 0;
+                }
             }
         }
+
+        await change();
     }
 
-    async make_solvable_puzzle() {
-        const { width: M, height: N, board, change_listener: change } = this;
+    async make_solvable_puzzle(is_retry) {
+        const { width: M, height: N, board } = this;
+        const darr = [
+            [0, -1],
+            [1, 0],
+            [0, 1],
+            [-1, 0]
+        ];
 
         const pre = board.map(x => x.map(x => x));
+        const origin = board.map(x => x.map(x => x));
 
         let hint = Solver.make_hint_from_array(pre);
         this.attach_hint(hint);
         this.clear_board();
+        await this.solve(null, is_retry ?? 1);
 
         while (true) {
-            await this.solve();
-
             const unsolved_cnt = board.reduce((a, x) =>
                 a + x.reduce((a, x) =>
                     a + (x == 0 ? 1 : 0)
@@ -481,12 +507,43 @@ class PuzzleBoard {
             let cx = -1, cy = -1, mn = Infinity;
             for (let i = 0; i < N; i++) {
                 for (let j = 0; j < M; j++) {
+                    if (origin[i][j] != pre[i][j])
+                        continue;
                     if (board[i][j] != 0)
                         continue;
-                    if (pre[i][j] != 2)
+                    if (pre[i][j] == 1)
                         continue;
 
-                    const value = margin[i] + margin[N + j];
+                    let bit = 0;
+                    let cnt = 0;
+
+                    for (let k = 0; k < 4; k++) {
+                        const [dx, dy] = darr[k];
+
+                        const nx = j + dx;
+                        const ny = i + dy;
+
+                        if (!(0 <= nx && nx < M))
+                            continue;
+                        if (!(0 <= ny && ny < N))
+                            continue;
+
+                        if (origin[i][j] == 1) {
+                            bit |= (1 << k);
+                            cnt++;
+                        }
+                    }
+
+                    if ((pre[i][j] == 1) && (bit & 0b101 == 0) && (bit & 0b1010 == 0))
+                        continue;
+
+                    if ((pre[i][j] == 2) && ((bit & 0b101 != 0) || (bit & 0b1010 != 0)))
+                        continue;
+
+                    const value = (pre[i][j] == 2)?
+                        (margin[i] + margin[N + j] + 1 * (N + M) * (4 - cnt)) :
+                        ((N + M - margin[i] - margin[N + j]) + 1 *  (N + M) * (cnt));
+                    
                     if (mn <= value)
                         continue;
 
@@ -496,20 +553,21 @@ class PuzzleBoard {
                 }
             }
 
-            pre[cy][cx] = 1;
+            pre[cy][cx] = 3 - pre[cy][cx];
 
             hint = Solver.make_hint_from_array(pre);
             this.attach_hint(hint);
+            await this.solve([cy, N + cx], 1);
         }
 
         hint = Solver.make_hint_from_array(pre);
         this.attach_hint(hint);
         this.clear_board();
-        await this.solve();
+        await this.solve(null, 999999);
 
         if (JSON.stringify(pre) != JSON.stringify(board)) {
             this.board = pre;
-            this.make_solvable_puzzle();
+            await this.make_solvable_puzzle(999999);
         }
     }
 
@@ -1245,8 +1303,6 @@ class BoardContext {
                     this.solve_cnt++;
             }
         }
-
-        console.log(this.solve_cnt);
 
         if (this.solve_cnt == small_width * small_height)
             this.solve_clear();

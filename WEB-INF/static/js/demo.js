@@ -7,6 +7,7 @@ class DemoSimulator {
     image_data
     solver
     board
+    origin_board
 
     constructor() {
         this.state = 0;
@@ -40,14 +41,14 @@ class DemoSimulator {
             res.json()
         ).then((image_data) => {
             this.image_data = image_data;
-            this.print_image();
+            this.print_binary_image();
             this.next();
         });
 
         return false;
     }
 
-    print_image() {
+    async print_binary_image() {
         const { image_data } = this;
 
         const element = document.getElementById('card-method');
@@ -67,13 +68,17 @@ class DemoSimulator {
             node.querySelector('#card-text').id = '';
 
             const canvas = node.querySelector('#card-canvas');
-            const puzzle = Board.import_by_image(1, 1, data[0].length, data.length, data, true);
+            const puzzle = await Board.import_by_image(1, 1, data[0].length, data.length, data, true);
             draw_board(canvas, puzzle);
             node.querySelector('#card-canvas').id = '';
 
             node.querySelector('#button-select-binary-image').onclick = () => {
                 this.board = new PuzzleBoard(puzzle.small_width, puzzle.small_height);
                 this.board.board = puzzle.data;
+
+                this.origin_board = new PuzzleBoard(puzzle.small_width, puzzle.small_height);
+                this.origin_board.board = puzzle.data.map(x => x.map(x => x));
+
                 this.select_binary_image();
             };
             node.querySelector('#button-select-binary-image').id = '';
@@ -82,23 +87,49 @@ class DemoSimulator {
         }
     }
 
-    select_binary_image() {
+    async select_binary_image() {
         const { board } = this;
         this.next();
 
         this.ctx = document.getElementById('canvas-make-puzzle').getContext('2d');
+        this.ctx.canvas.width = 1500;
+        this.ctx.canvas.height = 1000;
+
         const solver = new Solver(board.width, board.height);
         this.solver = solver;
+        await this.draw_change_solve();
 
-        solver.board = board;
-        solver.attach_hint(Solver.make_hint_from_array(board.board));
         solver.board.change_listener = async (change_data) => {
             this.draw_change_solve(change_data);
-            await Utility.delay(100);
+            await Utility.delay(0);
         };
 
-        solver.board.clear_board();
-        solver.solve();
+        this.ctx.canvas.onclick = async function _click () {
+            this.ctx.canvas.onclick = null;
+            
+            solver.board.board = board.board.map(x => x.map(x => x));
+            await solver.make_solvable_puzzle();
+            this.draw_change_solve();
+    
+            document.getElementById('button-solve').classList.remove('invisible');
+            document.getElementById('button-solve').onclick = this.show_solve.bind(this);
+
+            this.ctx.canvas.onclick = _click.bind(this);
+        }.bind(this);
+    }
+
+    async show_solve() {
+        this.next();
+
+        this.ctx = document.getElementById('canvas-solve-puzzle').getContext('2d');
+        this.ctx.canvas.width = 1500;
+        this.ctx.canvas.height = 1000;
+
+        const hint = Solver.make_hint_from_array(this.solver.board.board);
+        this.solver.attach_hint(hint);
+        this.solver.board.clear_board();
+        await this.solver.solve();
+        this.draw_change_solve();
     }
 
     draw_change_solve(change_data) {
@@ -108,19 +139,20 @@ class DemoSimulator {
         const { solver, ctx } = this;
         const { board } = solver;
         let { width: canvas_width, height: canvas_height } = ctx.canvas;
+
         const { width, height, hint, board: arr } = board;
         const [hint_width, hint_height] = Array.from({ length: 2 }, (_, i) =>
-            max(hint[i].map(x => x.length), 1)
+            max(...hint[i].map(x => x.length), 1)
         );
         const [real_width, real_height] = [width + hint_width, height + hint_height];
 
         ctx.save();
-        console.log(ctx, JSON.parse(JSON.stringify(change_data)));
 
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvas_width, canvas_height);
 
         ctx.translate(canvas_width * ratio, canvas_height * ratio);
+
         canvas_width = canvas_width * (1 - 2 * ratio);
         canvas_height = canvas_height * (1 - 2 * ratio);
 

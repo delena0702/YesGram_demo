@@ -11,6 +11,7 @@ async function create_element() {
         const description = image_data[method]['desc'];
         const image = image_data[method]['data'];
         const board = await Board.import_by_image(large_width, large_height, small_width, small_height, image);
+        console.log(board);
         const node = base_node.cloneNode(true);
 
         node.querySelector("#button-select").addEventListener('click', () => {
