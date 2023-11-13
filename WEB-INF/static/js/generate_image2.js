@@ -39,6 +39,7 @@ async function create_element() {
 function save_puzzle(board) {
     const pid = LocalStorageManager.get_empty_puzzle_id();
     LocalStorageManager.set_board(pid, board);
+    alert("퍼즐을 저장하였습니다. 수정 페이지로 이동합니다.");
     location.href = `/edit/big?pid=${pid}`;
 }
 

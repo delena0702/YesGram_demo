@@ -128,7 +128,17 @@ class DemoSimulator {
         const hint = Solver.make_hint_from_array(this.solver.board.board);
         this.solver.attach_hint(hint);
         this.solver.board.clear_board();
-        await this.solver.solve();
+
+        this.ctx.canvas.onclick = async function _click () {
+            this.ctx.canvas.onclick = null;
+            
+            this.solver.board.clear_board();
+            await this.solver.solve();
+            this.draw_change_solve();
+
+            this.ctx.canvas.onclick = _click.bind(this);
+        }.bind(this);
+
         this.draw_change_solve();
     }
 

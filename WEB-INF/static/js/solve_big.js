@@ -6,6 +6,13 @@ var config = {
 function init() {
     const pid = 0 | Utility.get_parameter('pid');
     const board = LocalStorageManager.get_board(pid);
+
+    if (board == null) {
+        alert("존재하지 않는 퍼즐입니다.");
+        history.back();
+        return;
+    }
+    
     const solve_data = LocalStorageManager.get_solve_data(pid);
 
     board_context = new BoardContext('img-board', board, ConfigValue.MODE_BIG_SOLVE, {

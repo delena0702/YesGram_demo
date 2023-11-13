@@ -396,7 +396,7 @@ class PuzzleBoard {
         const { width: M, height: N, board, hint, change_listener: change } = this;
 
         const queue = init_queue ?? Array.from({ length: N + M }, (_, i) => i);
-        const in_queue = Array.from({length: N + M}, (_, i) => queue.includes(i));
+        const in_queue = Array.from({ length: N + M }, (_, i) => queue.includes(i));
         skip_cnt = skip_cnt ?? 0;
 
         if (init_queue) {
@@ -431,7 +431,7 @@ class PuzzleBoard {
                         in_queue[N + j] = true;
                     }
                 }
-            
+
                 if (is_change && (++skip_idx > skip_cnt)) {
                     await change([idx, queue]);
                     skip_idx = 0;
@@ -460,7 +460,7 @@ class PuzzleBoard {
                         in_queue[i] = true;
                     }
                 }
-            
+
                 if (is_change && (++skip_idx > skip_cnt)) {
                     await change([idx, queue]);
                     skip_idx = 0;
@@ -540,10 +540,10 @@ class PuzzleBoard {
                     if ((pre[i][j] == 2) && ((bit & 0b101 != 0) || (bit & 0b1010 != 0)))
                         continue;
 
-                    const value = (pre[i][j] == 2)?
+                    const value = (pre[i][j] == 2) ?
                         (margin[i] + margin[N + j] + 1 * (N + M) * (4 - cnt)) :
-                        ((N + M - margin[i] - margin[N + j]) + 1 *  (N + M) * (cnt));
-                    
+                        ((N + M - margin[i] - margin[N + j]) + 1 * (N + M) * (cnt));
+
                     if (mn <= value)
                         continue;
 
@@ -649,7 +649,13 @@ class BoardContext {
                     0
                 )
             );
+
             this.solve_cnt = 0;
+            for (let i = 0; i < small_height; i++)
+                for (let j = 0; j < small_width; j++) {
+                    if (board.data[small_height * small_y + i][small_height * small_x + j] == 2)
+                        this.solve_cnt++;
+                }
 
             this.mw = Math.max(...this.hint[0].map(x => x.length), 1) + 1;
             this.mh = Math.max(...this.hint[1].map(x => x.length), 1) + 1;
@@ -1277,8 +1283,8 @@ class BoardContext {
         const offset_x = small_x * small_width;
         const offset_y = small_y * small_height;
 
-        if (t == 0) t = 1;
-        else if (t == 2) t = 2;
+        if (t == 0) t = (input_data[ssy][ssx] != 1) ? 1 : 0;
+        else if (t == 2) t = (input_data[ssy][ssx] != 2) ? 2 : 0;
         else t = (input_data[ssy][ssx] != 1) ? 1 : 2;
 
         const value = t;
@@ -1292,10 +1298,10 @@ class BoardContext {
 
         for (let i = ly; i <= ry; i++) {
             for (let j = lx; j <= rx; j++) {
-                if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
+                if (input_data[i][j] % 2 == board.data[offset_y + i][offset_x + j] % 2)
                     this.solve_cnt--;
                 input_data[i][j] = value;
-                if (input_data[i][j] == board.data[offset_y + i][offset_x + j])
+                if (input_data[i][j] % 2 == board.data[offset_y + i][offset_x + j] % 2)
                     this.solve_cnt++;
             }
         }
@@ -1446,10 +1452,19 @@ class LocalStorageManager {
             list.delete(puzzle_id);
         }
         else {
-            const solved_data = Array.from({ length: board.large_height }, () =>
-                Array.from({ length: board.large_width }, () =>
-                    0
-                )
+            const { large_width, large_height, small_width, small_height } = board;
+            const solved_data = Array.from({ length: large_height }, (_, i) =>
+                Array.from({ length: large_width }, (_, j) => {
+                    let retval = 1;
+
+                    for (let y = 0; y < small_height; y++) {
+                        for (let x = 0; x < small_width; x++) {
+                            if (board.data[small_height * i + y][small_width * j + x] == 1)
+                                retval = 0;
+                        }
+                    }
+                    return retval;
+                })
             );
 
             localStorage.setItem(key, puzzle);

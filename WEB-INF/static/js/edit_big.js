@@ -3,6 +3,8 @@ function init() {
     let board = LocalStorageManager.get_board(pid);
 
     if (board == null) {
+        alert("존재하지 않는 퍼즐입니다.");
+        history.back();
         return;
     }
     
